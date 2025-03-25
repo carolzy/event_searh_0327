@@ -1,0 +1,657 @@
+diff --git a/app.py b/app.py
+index 0f0000..1111111 100644
+--- a/app.py
++++ b/app.py
+@@ -245,8 +245,7 @@ async def index():
+     """Serve the main page"""
+     try:
+         # Generate a natural greeting using Gemini
+-        greeting = await generate_natural_greeting()
+-        
++        greeting = await generate_natural_greeting() 
+         # Get the flow controller instance
+         global flow_controller
+         if flow_controller is None:
+             flow_controller = FlowController()
+         
+-        # Reset the flow controller
++        # Reset the flow controller 
+         flow_controller.current_step = 'product'
+         flow_controller.current_product_line = ''
+         flow_controller.current_sector = ''
+         flow_controller.current_segment = ''
+         flow_controller.keywords = []
+         flow_controller.conversation_memory = []
+         
+-        # Get the first question
++        # Get the first question 
+         first_question = await flow_controller.generate_personalized_response('product')
+         
+         return await render_template('index.html', 
+                                     greeting=greeting,
+                                     first_question=first_question,
+                                     version=VERSION)
+     except Exception as e:
+         logger.error(f"Error rendering index: {str(e)}")
+         return str(e), 500
+
++async def generate_natural_greeting():
++    """Generate a natural greeting using Gemini 2.0 Flash."""
++    try:
++        # Create prompt for greeting
++        prompt = """Generate a friendly, conversational welcome message for a B2B sales assistant named Atom.ai.
++        The message should:
++        1. Introduce Atom.ai as a helpful assistant for B2B sales needs
++        2. Mention that it can help identify potential companies to target
++        3. Sound natural and conversational, not robotic
++        4. Be brief (1-2 sentences)
++        5. End with a question about what product the user sells
++        
++        The greeting MUST include the name "Atom.ai" with this exact capitalization.
++        """
++        
++        logger.info("Generating natural greeting with Gemini 2.0 Flash")
++        api_key = os.getenv("GEMINI_API_KEY")
++        if not api_key:
++            logger.error("No Gemini API key found for greeting")
++            return "Hi! I'm Atom.ai. Let's chat about your B2B sales needs so I can find the perfect recommendations for you."
++            
++        url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key={api_key}"
++        
++        data = {
++            "contents": [{
++                "parts": [{"text": prompt}]
++            }],
++            "generationConfig": {
++                "temperature": 0.7,
++                "topK": 40,
++                "topP": 0.95,
++                "maxOutputTokens": 256
++            }
++        }
++        
++        async with httpx.AsyncClient() as client:
++            response = await client.post(
++                url,
++                json=data,
++                timeout=15.0
++            )
++            
++            if response.status_code == 200:
++                result = response.json()
++                if "candidates" in result and len(result["candidates"]) > 0:
++                    content = result["candidates"][0]["content"]
++                    if "parts" in content and len(content["parts"]) > 0:
++                        greeting = content["parts"][0]["text"]
++                        logger.info(f"Generated natural greeting: {greeting}")
++                        return greeting
++            
++            logger.error(f"Error or unexpected response from Gemini API: {response.status_code}")
++        
++        # Fallback greeting if Gemini API call fails
++        return "Hi! I'm Atom.ai. Let's chat about your B2B sales needs so I can find the perfect recommendations for you."
++        
++    except Exception as e:
++        logger.error(f"Error generating natural greeting: {str(e)}")
++        logger.error(traceback.format_exc())
++        return "Hi! I'm Atom.ai. Let's chat about your B2B sales needs so I can find the perfect recommendations for you."
++
+
+@@ -342,39 +348,42 @@ async def generate_keywords_with_llm(context):
+             # Return some default keywords if generation fails
+             return ["Sales", "Marketing", "Technology", "Innovation", "Business Development"]
+ 
++async def direct_gemini_call(prompt, temperature=0.7, max_tokens=256):
++    """
++    Make a direct API call to Gemini 2.0 Flash model.
++    Returns the generated text or None if there's an error.
++    """
++    try:
++        # Get API key
++        api_key = os.environ.get("GEMINI_API_KEY")
++        if not api_key:
++            logger.error("No Gemini API key found in environment")
++            return None
++            
++        # Construct API URL and payload
++        url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key={api_key}"
++        
++        payload = {
++            "contents": [{"parts": [{"text": prompt}]}],
++            "generationConfig": {
++                "temperature": temperature,
++                "maxOutputTokens": max_tokens
++            }
++        }
++        
++        logger.info(f"Calling Gemini API with prompt: {prompt[:100]}...")
++        
++        # Make the API call
++        async with httpx.AsyncClient() as client:
++            response = await client.post(url, json=payload, timeout=10.0)
++            if response.status_code == 200:
++                result = response.json()
++                if "candidates" in result and len(result["candidates"]) > 0:
++                    content = result["candidates"][0]["content"]
++                    if "parts" in content and len(content["parts"]) > 0:
++                        return content["parts"][0]["text"]
++            return None
++    except Exception as e:
++        logger.error(f"Exception in direct_gemini_call: {str(e)}")
++        return None
++
+ async def generate_natural_greeting():
+     """Generate a natural greeting using Gemini 2.0 Flash."""
+     try:
+         # Create prompt for greeting
+         prompt = """Generate a friendly, conversational welcome message for a B2B sales assistant named Atom.ai.
+         The message should:
+         1. Introduce Atom.ai as a helpful assistant for B2B sales needs
+         2. Mention that it can help identify potential companies to target
+         3. Sound natural and conversational, not robotic
+         4. Be brief (1-2 sentences)
+         5. End with a question about what product the user sells
+         
+         The greeting MUST include the name "Atom.ai" with this exact capitalization.
+         """
+         
+         logger.info("Generating natural greeting with Gemini 2.0 Flash")
+         api_key = os.getenv("GEMINI_API_KEY")
+         if not api_key:
+             logger.error("No Gemini API key found for greeting")
+             return "Hi! I'm Atom.ai. Let's chat about your B2B sales needs so I can find the perfect recommendations for you."
+         
+         url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key={api_key}"
+         
+         data = {
+             "contents": [{
+                 "parts": [{"text": prompt}]
+             }],
+             "generationConfig": {
+                 "temperature": 0.7,
+                 "topK": 40,
+                 "topP": 0.95,
+                 "maxOutputTokens": 256
+             }
+         }
+         
+         async with httpx.AsyncClient() as client:
+             response = await client.post(
+                 url,
+                 json=data,
+                 timeout=15.0
+             )
+             
+             if response.status_code == 200:
+                 result = response.json()
+                 if "candidates" in result and len(result["candidates"]) > 0:
+                     content = result["candidates"][0]["content"]
+                     if "parts" in content and len(content["parts"]) > 0:
+                         greeting = content["parts"][0]["text"]
+                         logger.info(f"Generated natural greeting: {greeting}")
+                         return greeting
+             
+             logger.error(f"Error or unexpected response from Gemini API: {response.status_code}")
+         
+         # Fallback greeting if Gemini API call fails
+         return "Hi! I'm Atom.ai. Let's chat about your B2B sales needs so I can find the perfect recommendations for you."
+         
+     except Exception as e:
+         logger.error(f"Error generating natural greeting: {str(e)}")
+         logger.error(traceback.format_exc())
+         return "Hi! I'm Atom.ai. Let's chat about your B2B sales needs so I can find the perfect recommendations for you."
+
+diff --git a/company_recommender.py b/company_recommender.py
+index 0f0000..1111111 100644
+--- a/company_recommender.py
++++ b/company_recommender.py
+@@ -9,7 +9,6 @@ from typing import List, Dict, Any, Optional
+ 
+ # Load environment variables
+ load_dotenv()
+ 
+ logger = logging.getLogger(__name__)
+ 
+ class CompanyRecommender:
+     """Recommends target companies based on user preferences"""
+     
+     def __init__(self, flow_controller):
+         """Initialize the company recommender"""
+         self.flow_controller = flow_controller
+         self.gemini_api_key = os.getenv("GEMINI_API_KEY")
+-        self.perplexity_api_key = os.getenv("PERPLEXITY_API_KEY")
+         self.openai_api_key = os.getenv("OPENAI_API_KEY")
+-        self.use_llm = self.gemini_api_key is not None or self.perplexity_api_key is not None or self.openai_api_key is not None
++        self.use_llm = self.gemini_api_key is not None or self.openai_api_key is not None
+         self.use_mock_data = os.getenv("USE_MOCK_DATA", "false").lower() == "true"
+         
+         # Priority sources for company information
+         self.priority_news_sources = [
+             "techcrunch.com",
+             "crunchbase.com",
+             "pitchbook.com",
+             "venturebeat.com",
+             "forbes.com",
+             "businessinsider.com",
+             "cnbc.com",
+             "reuters.com",
+             "bloomberg.com",
+             "wsj.com"
+         ]
+
+@@ -104,22 +103,17 @@ class CompanyRecommender:
+             # Call the Gemini API with optimized settings
+             async with httpx.AsyncClient(timeout=90.0) as client:  
+                 url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key={self.gemini_api_key}"
+                 
+-                # Check if we need to use a more capable model for complex queries
+-                use_pro_model = False
+-                tech_terms = ["gemini", "flash", "2.0", "ai", "ml", "llm", "gpt", "claude", "anthropic", "openai"]
+-                startup_terms = ["startup", "early stage", "seed", "series a", "emerging"]
+-                
+-                # Use Pro model for more complex queries about startups or specific technologies
+-                if (product and any(term in product.lower() for term in tech_terms + startup_terms)) or (keywords and any(term in " ".join(keywords).lower() for term in tech_terms + startup_terms)):
+-                    use_pro_model = True
+-                    url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-pro:generateContent?key={self.gemini_api_key}"
+-                    logger.info("Using Gemini 2.0 Pro model for more detailed startup/technology search")
+-                
+                 data = {
+                     "contents": [{
+                         "parts": [{"text": prompt}]
+                     }],
+                     "generationConfig": {
+-                        "temperature": 0.2 if not use_pro_model else 0.4,  # Higher temperature for more diverse results with Pro
++                        "temperature": 0.2,
+                         "topP": 0.95,
+                         "topK": 40,
+-                        "maxOutputTokens": 4096 if not use_pro_model else 8192  # Increased token limit for Pro model
++                        "maxOutputTokens": 4096
+                     }
+                 }
+                 
+-                logger.info(f"Calling Gemini {'2.0 Pro' if use_pro_model else '2.0 Flash'} API for recommendations")
++                logger.info("Calling Gemini 2.0 Flash API for recommendations")
+
+@@ -372,76 +366,118 @@ class CompanyRecommender:
+                 except Exception as e:
+                     logger.error(f"Error updating keywords with LLM: {str(e)}")
+                     # Set default keywords as fallback if no keywords have been generated yet
+                     
+     def _parse_recommendations_from_llm_response(self, response: str) -> List[Dict]:
+         """Parse recommendations from LLM response"""
+         try:
+-            # Log hash of response for debugging
+-            response_hash = hash(response)
+-            logger.info(f"Parsing recommendations from response hash: {response_hash}")
+-            
+-            # First, check if the entire response is valid JSON
++            # Attempt direct JSON parsing first
+             try:
+                 recommendations = json.loads(response)
+                 if isinstance(recommendations, list):
+                     logger.info(f"Successfully parsed response as JSON array with {len(recommendations)} recommendations")
+                     return recommendations
+                 elif isinstance(recommendations, dict):
+                     logger.info("Successfully parsed response as single JSON object")
+                     return [recommendations]
+-            except json.JSONDecodeError:
+-                # Not valid JSON, continue with extraction methods
++            except json.JSONDecodeError: 
++                # Continue with more extraction methods...
+                 pass
+             
+-            # Clean up the response to extract just the JSON part
+-            # First, try to find JSON array in the response
++            # Look for JSON array in the response
+             json_start = response.find('[')
+             json_end = response.rfind(']') + 1
+             
+             if json_start >= 0 and json_end > json_start:
+                 # Extract the JSON array
+                 json_str = response[json_start:json_end]
+                 try:
+                     recommendations = json.loads(json_str)
+                     if isinstance(recommendations, list):
+                         logger.info(f"Successfully extracted JSON array with {len(recommendations)} recommendations")
+                         return recommendations
+                 except json.JSONDecodeError:
+                     logger.warning(f"Failed to parse extracted JSON array. Attempting other methods.")
+             
+-            # If we couldn't find a JSON array, look for JSON objects
+-            json_start = response.find('{')
+-            json_end = response.rfind('}') + 1
++            # Try to find individual JSON objects
++            import re
++            json_objects = []
++            pattern = r'\{\s*"name"\s*:.*?\}\s*(?=\{|$)'
++            matches = re.findall(pattern, response, re.DOTALL)
+             
+-            if json_start >= 0 and json_end > json_start:
+-                # Extract the JSON object and wrap it in an array
+-                json_str = response[json_start:json_end]
+-                try:
+-                    recommendation = json.loads(json_str)
+-                    if isinstance(recommendation, dict):
+-                        logger.info("Successfully extracted a single JSON object recommendation")
+-                        return [recommendation]
+-                except json.JSONDecodeError:
+-                    logger.warning(f"Failed to parse extracted JSON object. Attempting other methods.")
+-            
+-            # If we still couldn't find valid JSON, try to extract code blocks
+-            code_block_patterns = [
+-                r'```json\s*([\s\S]*?)\s*```',  # Markdown JSON code blocks
+-                r'```\s*([\s\S]*?)\s*```',      # Generic code blocks
+-                r'<json>\s*([\s\S]*?)\s*</json>'  # XML-style JSON blocks
+-            ]
+-            
+-            for pattern in code_block_patterns:
+-                import re
+-                json_blocks = re.findall(pattern, response)
+-                if json_blocks:
+-                    for block in json_blocks:
+-                        try:
+-                            content = json.loads(block)
+-                            if isinstance(content, list):
+-                                logger.info(f"Successfully extracted JSON array from code block with {len(content)} recommendations")
+-                                return content
+-                            elif isinstance(content, dict):
+-                                logger.info("Successfully extracted a single JSON object from code block")
+-                                return [content]
+-                        except json.JSONDecodeError:
+-                            continue
++            if matches:
++                for match in matches:
++                    try:
++                        obj = json.loads(match)
++                        json_objects.append(obj)
++                    except:
++                        continue
++                    
++                if json_objects:
++                    logger.info(f"Extracted {len(json_objects)} individual JSON objects")
++                    return json_objects
+             
++            # If all else fails, return mock data
++            logger.warning("Could not extract valid JSON. Returning mock data.")
++            return self._get_mock_recommendations(3)
++            
+             # Try to fix common JSON errors and retry
+             fixed_response = self._fix_common_json_errors(response)
+             if fixed_response != response:
+                 try:
+                     recommendations = json.loads(fixed_response)
+                     if isinstance(recommendations, list):
+                         logger.info(f"Successfully parsed fixed JSON with {len(recommendations)} recommendations")
+                         return recommendations
+                     elif isinstance(recommendations, dict):
+                         logger.info("Successfully parsed fixed JSON as single object")
+                         return [recommendations]
+                 except json.JSONDecodeError:
+                     pass
+                 
+         except Exception as e:
+             logger.error(f"Error parsing recommendations: {str(e)}")
+-            logger.error(f"Response: {response[:500]}...")
+-            return []
++            logger.info("Falling back to mock recommendations.")
++            return self._get_mock_recommendations(3)
+
+diff --git a/env.template b/env.template
+index 0f0000..1111111 100644
+--- a/env.template
++++ b/env.template
+@@ -7,9 +7,6 @@ OPENAI_API_KEY=
+ # Default model to use (can be gpt-4, gpt-3.5-turbo, etc.)
+ OPENAI_MODEL=gpt-4
+ 
+ # Required for Google Gemini API (used for keyword generation and recommendations)
+ GEMINI_API_KEY=
+ 
+-# Required for Perplexity API (used for company recommendations)
+-PERPLEXITY_API_KEY=
+-
+ # Required for ElevenLabs API (used for text-to-speech)
+ ELEVENLABS_API_KEY=
+ 
+ # Required for Google Search API (used by web searcher)
+ GOOGLE_API_KEY=
+ GOOGLE_CX=
+
+diff --git a/flow_controller.py b/flow_controller.py
+index 0f0000..1111111 100644
+--- a/flow_controller.py
++++ b/flow_controller.py
+@@ -114,24 +114,21 @@ class FlowController:
+         if not hasattr(self, 'keywords') or not self.keywords:
+             self.keywords = []
+     
+-    def get_next_step(self, current_step):
++    def get_next_step(self, current_step): 
+         """Get the next step in the conversation flow."""
+         step_sequence = ['product', 'market', 'company_size', 'complete']
+         try:
+             current_index = step_sequence.index(current_step)
+             if current_index < len(step_sequence) - 1:
+                 return step_sequence[current_index + 1]
+             else:
+                 return 'complete'
+         except ValueError:
+             return 'product'  # Default to first step if current step not found
+ 
+     async def get_question(self, step: str) -> str:
+-        """Async wrapper for get_question_for_step."""
+-        return self.get_question_for_step(step)
+-        
+-    async def generate_personalized_response(self, step, previous_answer=None):
+-        """Generate a personalized response for the current step using Gemini 2.0 Flash."""
+-        try:
+-            # Build context from previous answers
+-            context = self._build_conversation_context()
++        """Get the question for the current step."""
++        try: 
++            # Generate a more natural question for better UX
++            return await self.generate_personalized_response(step)
++        except Exception as e:
++            logger.error(f"Error getting personalized question: {str(e)}")
++            # Fallback to simple question
++            return self.get_question_for_step(step)
+
++    async def generate_personalized_response(self, step, previous_answer=None):
++        """Generate a personalized response for the current step using Gemini 2.0 Flash."""
++        try:
++            # Build context from previous answers
++            context = self._build_conversation_context()
++            
++            # Create a prompt for Gemini based on the current step and previous answers
++            prompt = self._create_step_prompt(step, previous_answer, context)
++            
++            # Call Gemini API
++            api_key = os.environ.get("GEMINI_API_KEY")
++            if not api_key:
++                logger.error("No Gemini API key found for personalized response")
++                return self.get_question_for_step(step)
++                
++            url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key={api_key}"
++            
++            data = {
++                "contents": [{
++                    "parts": [{"text": prompt}]
++                }],
++                "generationConfig": {
++                    "temperature": 0.9,
++                    "topK": 40,
++                    "topP": 0.95,
++                    "maxOutputTokens": 1024
++                }
++            }
++            
++            async with httpx.AsyncClient() as client:
++                response = await client.post(
++                    url,
++                    json=data,
++                    timeout=15.0
++                )
++            
++            if response.status_code == 200:
++                result = response.json()
++                if "candidates" in result and len(result["candidates"]) > 0:
++                    content = result["candidates"][0]["content"]
++                    if "parts" in content and len(content["parts"]) > 0:
++                        personalized_response = content["parts"][0]["text"].strip()
++                        return personalized_response
++            
++            return self.get_question_for_step(step)
++        except Exception as e:
++            logger.error(f"Error generating personalized response: {str(e)}")
++            return self.get_question_for_step(step)
++
++    def _build_conversation_context(self):
++        """Build context from previous conversation for personalized responses."""
++        context = []
++        
++        if hasattr(self, 'current_product_line') and self.current_product_line:
++            context.append(f"Product/Service: {self.current_product_line}")
++            
++        if hasattr(self, 'current_sector') and self.current_sector:
++            context.append(f"Target Market/Industry: {self.current_sector}")
++            
++        if hasattr(self, 'current_segment') and self.current_segment:
++            context.append(f"Target Company Size: {self.current_segment}")
++            
++        if hasattr(self, 'keywords') and self.keywords:
++            context.append(f"Keywords: {', '.join(self.keywords[:10])}")
++            
++        return "\n".join(context)
++    
++    def _create_step_prompt(self, step, previous_answer, context):
++        """Create a prompt for Gemini based on the current step and previous answers."""
++        base_prompt = f"""You are Atom, a friendly, helpful B2B sales assistant with a warm, conversational style. You're helping a sales professional with their company research.
++
++Current conversation context:
++{context}
++
++User's most recent answer: "{previous_answer}"
++
++Based on this context, generate a natural, conversational response for the '{step}' step of the onboarding process. Your response should:
++1. Acknowledge specific details from the user's answer with genuine interest
++2. Connect their answer to how it will help you find better recommendations for them
++3. Provide 1-2 relevant specific examples or suggestions that could help the user
++4. Ask the next question in a warm, conversational way
++5. Use natural language with contractions (like "you're", "I'll", "that's")
++6. Sound like a knowledgeable friend rather than a formal assistant
++7. Keep your response very concise (2-3 sentences maximum)
++
++For reference, here's what you need to include in this step:
++"""
++
++        # Add step-specific instructions and examples
++        if step == 'product':
++            base_prompt += """
++Ask what product or service they sell, showing excitement about learning about their business.
++
++For example, if they mention software, you might briefly suggest: 'A CRM system or data analytics tool?'
++
++Be concise but helpful with any suggestions.
++"""
++        elif step == 'market':
++            base_prompt += """
++Ask what market or industry they target, acknowledging how their product could be valuable in different sectors.
++
++Briefly suggest 1-2 relevant industries like: 'Healthcare, Finance, or Technology?'
++
++Keep your suggestions relevant to their product if possible.
++"""
++        elif step == 'company_size':
++            base_prompt += """
++Ask what size companies they typically sell to, relating this to targeting strategy.
++
++Briefly mention 1-2 relevant company size categories: 'Enterprise (1000+ employees) or Mid-market (100-999 employees)?'
++
++Keep it short but informative.
++"""
++        elif step == 'complete':
++            base_prompt += """
++Thank them for sharing their information and let them know that you're ready to help them find companies that match their criteria.
++
++Be enthusiastic but concise about the recommendations you can provide.
++"""
++        else:
++            base_prompt += "Ask how you can help them with their B2B research today in a friendly, conversational way."
++            
++        return base_prompt
+
+diff --git a/question_engine.py b/question_engine.py
+index 0f0000..1111111 100644
+--- a/question_engine.py
++++ b/question_engine.py
+@@ -352,42 +352,50 @@ class QuestionEngine:
+         """
+         Get a response from the Gemini Flash 2.0 API
+         
+         Args:
+             prompt (str): The prompt to send to the Gemini API
+             
+         Returns:
+             str: The response text from the Gemini API
+         """
+         try:
+             if not self.gemini_api_key:
+                 logger.error("No Gemini API key found. Cannot generate response.")
+-                return None
++                return "I'm sorry, I'm having trouble connecting to my language model. Please try again later."
+                 
+             # Call the Gemini API
+             url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key={self.gemini_api_key}"
+             
+             data = {
+                 "contents": [{
+                     "parts": [{"text": prompt}]
+                 }],
+                 "generationConfig": {
+                     "temperature": 0.7,
+                     "topK": 40,
+                     "topP": 0.95,
+                     "maxOutputTokens": 1024
+                 },
+                 "safetySettings": [
+                     {
+                         "category": "HARM_CATEGORY_HARASSMENT",
+                         "threshold": "BLOCK_MEDIUM_AND_ABOVE"
+                     }
+                 ],
+-                "tools": [
+-                    {
+-                        "googleSearchRetrieval": {}
+-                    }
+-                ]
+             }
+             
+-            async with httpx.AsyncClient() as client:
+-                response = await client.post(
+-                    url,
+-                    json=data,
+-                    timeout=15.0
+-                )
++            try:
++                async with httpx.AsyncClient() as client:
++                    response = await client.post(
++                        url,
++                        json=data,
++                        timeout=15.0
++                    )
++            except httpx.RequestError as e:
++                logger.error(f"Request error to Gemini API: {str(e)}")
++                return "I'm experiencing connectivity issues. Let's try something simpler."
+             
+             if response.status_code == 200:
+                 result = response.json()
+                 if "candidates" in result and len(result["candidates"]) > 0:
+                     content = result["candidates"][0]["content"]
+                     if "parts" in content and len(content["parts"]) > 0:
+                         response_text = content["parts"][0]["text"]
+                         logger.info(f"Generated response with Gemini API: {response_text[:100]}...")
+                         return response_text
+                
+                logger.error(f"Unexpected response format from Gemini API: {result}")
+-                return None
++                return "I'm sorry, I'm having trouble connecting to my language model. Please try again later."
