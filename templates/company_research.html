@@ -1,0 +1,244 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>{{ insights.company_name }} - Target Research</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        .reference-link {
+            color: #0066cc;
+            text-decoration: none;
+            margin-left: 10px;
+            font-size: 0.9em;
+        }
+        .reference-link:hover {
+            text-decoration: underline;
+        }
+        .content-block {
+            margin-bottom: 30px;
+            padding: 20px;
+            border-radius: 8px;
+            background-color: #f8f9fa;
+        }
+        .date-tag {
+            background-color: #e9ecef;
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-size: 0.85em;
+            margin-right: 10px;
+        }
+        .relevance-high {
+            border-left: 4px solid #28a745;
+        }
+        .keyword-tag {
+            background-color: #e7f5ff;
+            color: #0066cc;
+            padding: 2px 8px;
+            border-radius: 12px;
+            margin: 0 5px 5px 0;
+            display: inline-block;
+            font-size: 0.9em;
+        }
+        .metadata-bar {
+            background: #f8f9fa;
+            padding: 10px;
+            margin-bottom: 20px;
+            border-radius: 4px;
+            font-size: 0.9em;
+        }
+        .api-mode {
+            background: #e9ecef;
+            padding: 2px 8px;
+            border-radius: 12px;
+            font-size: 0.8em;
+            margin-left: 10px;
+        }
+        .nav-tabs {
+            margin-bottom: 20px;
+        }
+        .nav-tabs .nav-link {
+            color: #495057;
+        }
+        .nav-tabs .nav-link.active {
+            font-weight: bold;
+        }
+        .quote-block {
+            border-left: 3px solid #6c757d;
+            padding-left: 15px;
+            margin: 10px 0;
+        }
+        .opportunity-tag {
+            display: inline-block;
+            padding: 2px 8px;
+            border-radius: 12px;
+            font-size: 0.9em;
+            margin: 0 5px;
+        }
+        .opportunity-high {
+            background-color: #d4edda;
+            color: #155724;
+        }
+        .opportunity-medium {
+            background-color: #fff3cd;
+            color: #856404;
+        }
+    </style>
+</head>
+<body>
+    <div class="container mt-5">
+        <div class="row">
+            <div class="col-12">
+                <!-- Header -->
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <h1>{{ insights.company_name }}</h1>
+                    <a href="/" class="btn btn-outline-primary">New Search</a>
+                </div>
+                
+                <!-- Metadata Bar -->
+                <div class="metadata-bar d-flex justify-content-between align-items-center">
+                    <div>
+                        <strong>Generated:</strong> {{ insights.metadata.timestamp }}
+                        <span class="api-mode">{{ insights.metadata.api_mode }}</span>
+                    </div>
+                    <div>
+                        <strong>Focus:</strong> {{ insights.metadata.context }}
+                    </div>
+                </div>
+                
+                <!-- Cloud & Data Initiatives -->
+                <div class="content-block mb-4">
+                    <h5>Cloud & Data Initiatives</h5>
+                    <div>
+                        {% for keyword in insights.detected_keywords %}
+                            <span class="keyword-tag">{{ keyword }}</span>
+                        {% endfor %}
+                    </div>
+                </div>
+
+                <!-- Navigation Tabs -->
+                <ul class="nav nav-tabs" id="researchTabs" role="tablist">
+                    <li class="nav-item">
+                        <a class="nav-link active" id="cloud-tab" data-bs-toggle="tab" href="#cloud" role="tab">Cloud Strategy</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" id="data-tab" data-bs-toggle="tab" href="#data" role="tab">Data Infrastructure</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" id="tech-tab" data-bs-toggle="tab" href="#tech" role="tab">Tech Stack</a>
+                    </li>
+                </ul>
+
+                <!-- Tab Content -->
+                <div class="tab-content" id="researchTabContent">
+                    <!-- Cloud Strategy Tab -->
+                    <div class="tab-pane fade show active" id="cloud" role="tabpanel">
+                        <!-- Cloud Migration -->
+                        <div class="content-block">
+                            <h3>Cloud Transformation</h3>
+                            {% for initiative in insights.profile.cloud_initiatives %}
+                                <div class="mb-4 p-3 {% if initiative.relevance == 'high' %}relevance-high{% endif %}">
+                                    <span class="date-tag">{{ initiative.date }}</span>
+                                    <span class="opportunity-tag {% if initiative.opportunity == 'high' %}opportunity-high{% endif %}">
+                                        {{ initiative.opportunity }} opportunity
+                                    </span>
+                                    <p>{{ initiative.content }}</p>
+                                    <a href="{{ initiative.source }}" class="reference-link" target="_blank">View Source →</a>
+                                </div>
+                            {% endfor %}
+                        </div>
+
+                        <!-- Cloud Providers -->
+                        <div class="content-block">
+                            <h3>Cloud Infrastructure</h3>
+                            {% for provider in insights.profile.cloud_providers %}
+                                <div class="mb-4 p-3 {% if provider.relevance == 'high' %}relevance-high{% endif %}">
+                                    <p>{{ provider.content }}</p>
+                                    <a href="{{ provider.source }}" class="reference-link" target="_blank">View Source →</a>
+                                </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+
+                    <!-- Data Infrastructure Tab -->
+                    <div class="tab-pane fade" id="data" role="tabpanel">
+                        <!-- Data Lakes -->
+                        <div class="content-block">
+                            <h3>Data Lake Strategy</h3>
+                            {% for lake in insights.investments.data_lakes %}
+                                <div class="mb-4 p-3 {% if lake.relevance == 'high' %}relevance-high{% endif %}">
+                                    <span class="date-tag">{{ lake.date }}</span>
+                                    <span class="opportunity-tag {% if lake.opportunity == 'high' %}opportunity-high{% endif %}">
+                                        {{ lake.opportunity }} opportunity
+                                    </span>
+                                    <p>{{ lake.content }}</p>
+                                    <a href="{{ lake.source }}" class="reference-link" target="_blank">View Source →</a>
+                                </div>
+                            {% endfor %}
+                        </div>
+
+                        <!-- Data Engineering -->
+                        <div class="content-block">
+                            <h3>Data Engineering Initiatives</h3>
+                            {% for initiative in insights.investments.data_engineering %}
+                                <div class="mb-4 p-3 {% if initiative.relevance == 'high' %}relevance-high{% endif %}">
+                                    <span class="date-tag">{{ initiative.date }}</span>
+                                    <span class="opportunity-tag {% if initiative.opportunity == 'high' %}opportunity-high{% endif %}">
+                                        {{ initiative.opportunity }} opportunity
+                                    </span>
+                                    <p>{{ initiative.content }}</p>
+                                    <a href="{{ initiative.source }}" class="reference-link" target="_blank">View Source →</a>
+                                </div>
+                            {% endfor %}
+                        </div>
+
+                        <!-- ML/AI Initiatives -->
+                        <div class="content-block">
+                            <h3>ML & AI Projects</h3>
+                            {% for project in insights.investments.ml_projects %}
+                                <div class="mb-4 p-3 {% if project.relevance == 'high' %}relevance-high{% endif %}">
+                                    <span class="date-tag">{{ project.date }}</span>
+                                    <span class="opportunity-tag {% if project.opportunity == 'high' %}opportunity-high{% endif %}">
+                                        {{ project.opportunity }} opportunity
+                                    </span>
+                                    <p>{{ project.content }}</p>
+                                    <a href="{{ project.source }}" class="reference-link" target="_blank">View Source →</a>
+                                </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+
+                    <!-- Tech Stack Tab -->
+                    <div class="tab-pane fade" id="tech" role="tabpanel">
+                        <!-- Current Stack -->
+                        <div class="content-block">
+                            <h3>Current Technology Stack</h3>
+                            {% for tech in insights.profile.tech_stack %}
+                                <div class="mb-4 p-3 {% if tech.relevance == 'high' %}relevance-high{% endif %}">
+                                    <p>{{ tech.content }}</p>
+                                    <a href="{{ tech.source }}" class="reference-link" target="_blank">View Source →</a>
+                                </div>
+                            {% endfor %}
+                        </div>
+
+                        <!-- Integration Points -->
+                        <div class="content-block">
+                            <h3>Integration Opportunities</h3>
+                            {% for integration in insights.profile.integration_points %}
+                                <div class="mb-4 p-3 {% if integration.relevance == 'high' %}relevance-high{% endif %}">
+                                    <span class="opportunity-tag {% if integration.opportunity == 'high' %}opportunity-high{% endif %}">
+                                        {{ integration.opportunity }} opportunity
+                                    </span>
+                                    <p>{{ integration.content }}</p>
+                                    <a href="{{ integration.source }}" class="reference-link" target="_blank">View Source →</a>
+                                </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

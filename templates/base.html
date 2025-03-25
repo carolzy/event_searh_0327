@@ -1,0 +1,465 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
+    <title>{% block title %}atom.ai{% endblock %}</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
+    <style>
+        :root {
+            --primary-black: #000000;
+            --primary-white: #ffffff;
+            --gray-50: #f9fafb;
+            --gray-100: #f3f4f6;
+            --gray-200: #e5e7eb;
+            --gray-300: #d1d5db;
+            --gray-400: #8e8ea0;
+            --gray-500: #6e6e80;
+            --gray-600: #4b5563;
+            --gray-700: #374151;
+            --gray-800: #343541;
+            --gray-900: #111827;
+            --accent-blue: #10a37f;
+            --accent-blue-hover: #1a7f64;
+            --accent-purple: #ab68ff;
+            --accent-purple-hover: #9256d9;
+            --error-red: #ff4a4a;
+            --success-green: #19c37d;
+            --warning-yellow: #f5a623;
+            --dark-bg: #0f0f0f;
+            --dark-card: #1a1a1a;
+            --dark-border: #333;
+            --dark-header: #222;
+        }
+        
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+        
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif;
+            background-color: var(--dark-bg);
+            color: var(--primary-white);
+            line-height: 1.5;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 24px;
+        }
+        
+        /* Header */
+        header {
+            padding: 16px 0;
+            border-bottom: 1px solid var(--dark-border);
+            background-color: var(--dark-bg);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+        
+        .header-content {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .logo {
+            display: flex;
+            align-items: center;
+            font-weight: 600;
+            font-size: 20px;
+            color: var(--primary-white);
+            text-decoration: none;
+            gap: 8px;
+        }
+        
+        .logo-icon {
+            font-size: 1.5rem;
+        }
+        
+        .nav-links {
+            display: flex;
+            gap: 24px;
+        }
+        
+        .nav-links a {
+            color: var(--gray-300);
+            text-decoration: none;
+            font-size: 14px;
+            font-weight: 500;
+            transition: color 0.2s ease;
+        }
+        
+        .nav-links a:hover {
+            color: var(--primary-white);
+        }
+        
+        .nav-links a.active {
+            color: var(--primary-white);
+            font-weight: 600;
+        }
+        
+        /* Buttons */
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            padding: 12px 24px;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            text-decoration: none;
+            border: none;
+            outline: none;
+        }
+        
+        .btn-primary {
+            background-color: var(--accent-blue);
+            color: var(--primary-white);
+        }
+        
+        .btn-primary:hover {
+            background-color: var(--accent-blue-hover);
+            transform: scale(1.05);
+        }
+        
+        .btn-secondary {
+            background-color: var(--dark-card);
+            color: var(--primary-white);
+            border: 1px solid var(--dark-border);
+        }
+        
+        .btn-secondary:hover {
+            background-color: var(--gray-800);
+        }
+        
+        .btn-text {
+            background-color: transparent;
+            color: var(--gray-300);
+            padding: 8px 12px;
+        }
+        
+        .btn-text:hover {
+            background-color: var(--gray-800);
+            color: var(--primary-white);
+        }
+        
+        /* Footer */
+        footer {
+            background-color: var(--dark-bg);
+            border-top: 1px solid var(--dark-border);
+            padding: 40px 0;
+            margin-top: auto;
+        }
+        
+        .footer-content {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .footer-links {
+            display: flex;
+            gap: 24px;
+        }
+        
+        .footer-links a {
+            color: var(--gray-400);
+            text-decoration: none;
+            font-size: 14px;
+            transition: color 0.2s ease;
+        }
+        
+        .footer-links a:hover {
+            color: var(--primary-white);
+        }
+        
+        .copyright {
+            color: var(--gray-400);
+            font-size: 14px;
+        }
+        
+        /* Cards */
+        .card {
+            background-color: var(--dark-card);
+            border-radius: 16px;
+            border: 1px solid var(--dark-border);
+            padding: 24px;
+            transition: all 0.2s ease;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3);
+        }
+        
+        .card:hover {
+            box-shadow: 0 15px 30px rgba(0, 0, 0, 0.4);
+            transform: translateY(-2px);
+        }
+        
+        /* Typography */
+        h1 {
+            font-size: 48px;
+            font-weight: 700;
+            line-height: 1.2;
+            margin-bottom: 24px;
+            letter-spacing: -0.02em;
+            color: var(--primary-white);
+        }
+        
+        h2 {
+            font-size: 36px;
+            font-weight: 700;
+            line-height: 1.2;
+            margin-bottom: 20px;
+            letter-spacing: -0.02em;
+            color: var(--primary-white);
+        }
+        
+        h3 {
+            font-size: 24px;
+            font-weight: 600;
+            line-height: 1.3;
+            margin-bottom: 16px;
+            color: var(--primary-white);
+        }
+        
+        h4 {
+            font-size: 18px;
+            font-weight: 600;
+            line-height: 1.4;
+            margin-bottom: 12px;
+            color: var(--primary-white);
+        }
+        
+        p {
+            margin-bottom: 16px;
+            font-size: 16px;
+            color: var(--gray-300);
+        }
+        
+        /* Utility classes */
+        .text-gradient {
+            background: linear-gradient(to right, var(--accent-blue), var(--accent-purple));
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+        }
+        
+        .flex {
+            display: flex;
+        }
+        
+        .flex-col {
+            flex-direction: column;
+        }
+        
+        .items-center {
+            align-items: center;
+        }
+        
+        .justify-center {
+            justify-content: center;
+        }
+        
+        .justify-between {
+            justify-content: space-between;
+        }
+        
+        .gap-4 {
+            gap: 16px;
+        }
+        
+        .gap-6 {
+            gap: 24px;
+        }
+        
+        .mt-4 {
+            margin-top: 16px;
+        }
+        
+        .mt-8 {
+            margin-top: 32px;
+        }
+        
+        .mb-4 {
+            margin-bottom: 16px;
+        }
+        
+        .mb-8 {
+            margin-bottom: 32px;
+        }
+        
+        .py-12 {
+            padding-top: 48px;
+            padding-bottom: 48px;
+        }
+        
+        .py-24 {
+            padding-top: 96px;
+            padding-bottom: 96px;
+        }
+        
+        .text-center {
+            text-align: center;
+        }
+        
+        .w-full {
+            width: 100%;
+        }
+        
+        .max-w-md {
+            max-width: 28rem;
+        }
+        
+        .max-w-lg {
+            max-width: 32rem;
+        }
+        
+        .max-w-xl {
+            max-width: 36rem;
+        }
+        
+        .max-w-2xl {
+            max-width: 42rem;
+        }
+        
+        .mx-auto {
+            margin-left: auto;
+            margin-right: auto;
+        }
+        
+        .rounded-full {
+            border-radius: 9999px;
+        }
+        
+        .bg-gray-50 {
+            background-color: var(--gray-50);
+        }
+        
+        .bg-gradient {
+            background: linear-gradient(to right, var(--accent-blue), var(--accent-purple));
+        }
+        
+        .hidden {
+            display: none;
+        }
+    </style>
+    
+    {% block styles %}{% endblock %}
+    {% block head_extra %}{% endblock %}
+</head>
+<body>
+    <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
+        <div class="container-fluid">
+            <a class="navbar-brand" href="/">Atom.ai</a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav">
+                    <li class="nav-item">
+                        <a class="nav-link" href="/">Home</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/recommendations-view">Recommendations</a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <main>
+        {% block content %}{% endblock %}
+    </main>
+    
+    <footer>
+        <div class="container footer-content">
+            <div class="copyright"> 2025 atom.ai. All rights reserved.</div>
+            <div class="footer-links">
+                <a href="/privacy">Privacy</a>
+                <a href="/terms">Terms</a>
+                <a href="/contact">Contact</a>
+            </div>
+        </div>
+    </footer>
+    
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="{{ url_for('static', filename='js/script.js') }}"></script>
+    <script>
+        // Check for microphone permissions on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            // Check if browser supports getUserMedia
+            if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
+                console.log("Browser supports getUserMedia");
+                
+                // Request microphone permission
+                navigator.mediaDevices.getUserMedia({ audio: true })
+                    .then(function(stream) {
+                        console.log("Microphone permission granted");
+                        // Stop the stream immediately, we just needed the permission
+                        stream.getTracks().forEach(track => track.stop());
+                        
+                        // Show a success message if we want
+                        const permissionStatus = document.createElement('div');
+                        permissionStatus.classList.add('alert', 'alert-success', 'microphone-status');
+                        permissionStatus.innerHTML = 'Microphone access granted! You can now use voice features.';
+                        permissionStatus.style.position = 'fixed';
+                        permissionStatus.style.bottom = '20px';
+                        permissionStatus.style.right = '20px';
+                        permissionStatus.style.zIndex = '1000';
+                        permissionStatus.style.maxWidth = '300px';
+                        document.body.appendChild(permissionStatus);
+                        
+                        // Remove the message after 5 seconds
+                        setTimeout(() => {
+                            permissionStatus.remove();
+                        }, 5000);
+                    })
+                    .catch(function(err) {
+                        console.error("Error accessing microphone:", err);
+                        
+                        // Show an error message with instructions
+                        const permissionError = document.createElement('div');
+                        permissionError.classList.add('alert', 'alert-danger', 'microphone-status');
+                        permissionError.innerHTML = `
+                            <strong>Microphone access denied.</strong> 
+                            <p>To use voice features, please allow microphone access in your browser settings.</p>
+                            <p>Look for the microphone icon in your address bar and click "Allow".</p>
+                        `;
+                        permissionError.style.position = 'fixed';
+                        permissionError.style.bottom = '20px';
+                        permissionError.style.right = '20px';
+                        permissionError.style.zIndex = '1000';
+                        permissionError.style.maxWidth = '300px';
+                        document.body.appendChild(permissionError);
+                        
+                        // Keep this error visible longer
+                        setTimeout(() => {
+                            permissionError.remove();
+                        }, 10000);
+                    });
+            } else {
+                console.error("Browser does not support getUserMedia");
+                // Show browser compatibility error if needed
+            }
+        });
+    </script>
+</body>
+</html>

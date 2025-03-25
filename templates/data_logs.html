@@ -1,0 +1,656 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>B2B Research Assistant - Data Logs</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #4F46E5;
+            --primary-dark: #4338CA;
+            --secondary: #10B981;
+            --accent: #F59E0B;
+            --text: #1F2937;
+            --text-light: #6B7280;
+            --bg: #F9FAFB;
+            --bg-card: #FFFFFF;
+            --border: #E5E7EB;
+        }
+        
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--bg);
+            color: var(--text);
+            margin: 0;
+            padding: 0;
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 2rem 1rem;
+            width: 100%;
+            box-sizing: border-box;
+        }
+        
+        header {
+            background-color: var(--bg-card);
+            border-bottom: 1px solid var(--border);
+            padding: 1rem 0;
+        }
+        
+        .header-content {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        
+        .logo {
+            display: flex;
+            align-items: center;
+            font-weight: 700;
+            font-size: 1.25rem;
+            color: var(--primary);
+        }
+        
+        .logo-icon {
+            margin-right: 0.5rem;
+            font-size: 1.5rem;
+        }
+        
+        .card {
+            background-color: var(--bg-card);
+            border-radius: 0.5rem;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+        }
+        
+        .card-title {
+            display: flex;
+            align-items: center;
+            font-size: 1.25rem;
+            font-weight: 600;
+            margin-top: 0;
+            margin-bottom: 1.5rem;
+            color: var(--text);
+        }
+        
+        .card-title-icon {
+            margin-right: 0.5rem;
+        }
+        
+        .tabs {
+            display: flex;
+            border-bottom: 1px solid var(--border);
+            margin-bottom: 1.5rem;
+        }
+        
+        .tab {
+            padding: 0.75rem 1.5rem;
+            cursor: pointer;
+            font-weight: 500;
+            color: var(--text-light);
+            border-bottom: 2px solid transparent;
+        }
+        
+        .tab.active {
+            color: var(--primary);
+            border-bottom: 2px solid var(--primary);
+        }
+        
+        .tab-content {
+            display: none;
+        }
+        
+        .tab-content.active {
+            display: block;
+        }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 1.5rem;
+        }
+        
+        th, td {
+            padding: 0.75rem;
+            text-align: left;
+            border-bottom: 1px solid var(--border);
+        }
+        
+        th {
+            font-weight: 600;
+            color: var(--text);
+            background-color: var(--bg);
+        }
+        
+        tr:hover {
+            background-color: var(--bg);
+        }
+        
+        .button {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            padding: 0.5rem 1rem;
+            border-radius: 0.375rem;
+            font-weight: 500;
+            cursor: pointer;
+            text-decoration: none;
+            transition: all 0.2s ease;
+        }
+        
+        .button.primary {
+            background-color: var(--primary);
+            color: white;
+            border: none;
+        }
+        
+        .button.primary:hover {
+            background-color: var(--primary-dark);
+        }
+        
+        .button.secondary {
+            background-color: white;
+            color: var(--text);
+            border: 1px solid var(--border);
+        }
+        
+        .button.secondary:hover {
+            background-color: var(--bg);
+        }
+        
+        .download-button {
+            margin-bottom: 1rem;
+        }
+        
+        .empty-state {
+            text-align: center;
+            padding: 2rem;
+            color: var(--text-light);
+        }
+        
+        .pagination {
+            display: flex;
+            justify-content: center;
+            margin-top: 1rem;
+        }
+        
+        .pagination-button {
+            padding: 0.5rem 1rem;
+            margin: 0 0.25rem;
+            border: 1px solid var(--border);
+            border-radius: 0.25rem;
+            cursor: pointer;
+            background-color: white;
+        }
+        
+        .pagination-button.active {
+            background-color: var(--primary);
+            color: white;
+            border-color: var(--primary);
+        }
+        
+        .pagination-button:hover:not(.active) {
+            background-color: var(--bg);
+        }
+        
+        .pagination-ellipsis {
+            padding: 0.5rem;
+            margin: 0 0.25rem;
+        }
+        
+        .search-container {
+            margin-bottom: 1rem;
+        }
+        
+        .search-input {
+            padding: 0.5rem;
+            border: 1px solid var(--border);
+            border-radius: 0.25rem;
+            width: 100%;
+            max-width: 300px;
+        }
+        
+        .fit-score-cell {
+            display: flex;
+            align-items: center;
+        }
+        
+        .fit-score-bar {
+            height: 8px;
+            background-color: #E5E7EB;
+            border-radius: 4px;
+            width: 100px;
+            margin-right: 0.5rem;
+            overflow: hidden;
+        }
+        
+        .fit-score-fill {
+            height: 100%;
+            background-color: var(--primary);
+        }
+        
+        .back-link {
+            display: inline-flex;
+            align-items: center;
+            color: var(--text-light);
+            text-decoration: none;
+            margin-bottom: 1rem;
+        }
+        
+        .back-link:hover {
+            color: var(--text);
+        }
+        
+        .back-icon {
+            margin-right: 0.25rem;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="container header-content">
+            <div class="logo">
+                <span class="logo-icon">🔍</span>
+                <span>B2B Research Assistant</span>
+            </div>
+            <div>
+                <a href="/" class="button secondary">Home</a>
+            </div>
+        </div>
+    </header>
+    
+    <main>
+        <div class="container">
+            <a href="/" class="back-link">
+                <span class="back-icon">←</span>
+                <span>Back to Home</span>
+            </a>
+            
+            <div class="card">
+                <h2 class="card-title">
+                    <span class="card-title-icon">📊</span>
+                    <span>Data Logs</span>
+                </h2>
+                
+                <div class="tabs">
+                    <div class="tab active" data-tab="onboarding">Onboarding Data</div>
+                    <div class="tab" data-tab="recommendations">Recommendations</div>
+                    <div class="tab" data-tab="events">Events & Meetups</div>
+                </div>
+                
+                <div class="tab-content active" id="onboarding">
+                    <div class="download-button">
+                        <a href="/onboarding_data.csv" download class="button primary">Download CSV</a>
+                    </div>
+                    
+                    <div class="search-container">
+                        <input type="text" id="onboarding-search" class="search-input" placeholder="Search onboarding data...">
+                    </div>
+                    
+                    <div class="table-container">
+                        <table id="onboarding-table">
+                            <thead>
+                                <tr>
+                                    <th>Timestamp</th>
+                                    <th>Product</th>
+                                    <th>Market</th>
+                                    <th>Company Size</th>
+                                    <th>Keywords</th>
+                                    <th>Zip Code</th>
+                                    <th>LinkedIn Consent</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% if onboarding_data %}
+                                    {% for entry in onboarding_data %}
+                                    <tr>
+                                        <td>{{ entry.timestamp }}</td>
+                                        <td>{{ entry.product }}</td>
+                                        <td>{{ entry.market }}</td>
+                                        <td>{{ entry.company_size }}</td>
+                                        <td>{{ entry.keywords }}</td>
+                                        <td>{{ entry.zip_code }}</td>
+                                        <td>{{ entry.linkedin_consent }}</td>
+                                    </tr>
+                                    {% endfor %}
+                                {% else %}
+                                    <tr>
+                                        <td colspan="7" class="empty-state">No onboarding data available</td>
+                                    </tr>
+                                {% endif %}
+                            </tbody>
+                        </table>
+                    </div>
+                    
+                    <div class="pagination" id="onboarding-pagination"></div>
+                </div>
+                
+                <div class="tab-content" id="recommendations">
+                    <div class="download-button">
+                        <a href="/recommendations_data.csv" download class="button primary">Download CSV</a>
+                    </div>
+                    
+                    <div class="search-container">
+                        <input type="text" id="recommendations-search" class="search-input" placeholder="Search recommendations...">
+                    </div>
+                    
+                    <div class="table-container">
+                        <table id="recommendations-table">
+                            <thead>
+                                <tr>
+                                    <th>Timestamp</th>
+                                    <th>Company Name</th>
+                                    <th>Description</th>
+                                    <th>Overall Fit</th>
+                                    <th>Product Fit</th>
+                                    <th>Market Fit</th>
+                                    <th>Size Fit</th>
+                                    <th>Keyword Fit</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% if recommendations_data %}
+                                    {% for entry in recommendations_data %}
+                                    <tr>
+                                        <td>{{ entry.timestamp }}</td>
+                                        <td>{{ entry.company_name }}</td>
+                                        <td>{{ entry.description }}</td>
+                                        <td>
+                                            <div class="fit-score-cell">
+                                                <div class="fit-score-bar">
+                                                    <div class="fit-score-fill" style="width: {{ entry.fit_score }}%;"></div>
+                                                </div>
+                                                <span>{{ entry.fit_score }}%</span>
+                                            </div>
+                                        </td>
+                                        <td>
+                                            <div class="fit-score-cell">
+                                                <div class="fit-score-bar">
+                                                    <div class="fit-score-fill" style="width: {{ entry.product_fit }}%;"></div>
+                                                </div>
+                                                <span>{{ entry.product_fit }}%</span>
+                                            </div>
+                                        </td>
+                                        <td>
+                                            <div class="fit-score-cell">
+                                                <div class="fit-score-bar">
+                                                    <div class="fit-score-fill" style="width: {{ entry.market_fit }}%;"></div>
+                                                </div>
+                                                <span>{{ entry.market_fit }}%</span>
+                                            </div>
+                                        </td>
+                                        <td>
+                                            <div class="fit-score-cell">
+                                                <div class="fit-score-bar">
+                                                    <div class="fit-score-fill" style="width: {{ entry.size_fit }}%;"></div>
+                                                </div>
+                                                <span>{{ entry.size_fit }}%</span>
+                                            </div>
+                                        </td>
+                                        <td>
+                                            <div class="fit-score-cell">
+                                                <div class="fit-score-bar">
+                                                    <div class="fit-score-fill" style="width: {{ entry.keyword_fit }}%;"></div>
+                                                </div>
+                                                <span>{{ entry.keyword_fit }}%</span>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                {% else %}
+                                    <tr>
+                                        <td colspan="8" class="empty-state">No recommendations data available</td>
+                                    </tr>
+                                {% endif %}
+                            </tbody>
+                        </table>
+                    </div>
+                    
+                    <div class="pagination" id="recommendations-pagination"></div>
+                </div>
+                
+                <div class="tab-content" id="events">
+                    <div class="download-button">
+                        <a href="/events_data.csv" download class="button primary">Download CSV</a>
+                    </div>
+                    
+                    <div class="search-container">
+                        <input type="text" id="events-search" class="search-input" placeholder="Search events...">
+                    </div>
+                    
+                    <div class="table-container">
+                        <table id="events-table">
+                            <thead>
+                                <tr>
+                                    <th>Company</th>
+                                    <th>Event Name</th>
+                                    <th>Date</th>
+                                    <th>Location</th>
+                                    <th>Description</th>
+                                    <th>URL</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <!-- Events data will be loaded here -->
+                            </tbody>
+                        </table>
+                        <div class="empty-state" id="events-empty-state" style="display: none;">
+                            No events data available.
+                        </div>
+                    </div>
+                    <div class="pagination" id="events-pagination"></div>
+                </div>
+            </div>
+        </div>
+    </main>
+    
+    <script>
+        // Tab switching functionality
+        document.querySelectorAll('.tab').forEach(tab => {
+            tab.addEventListener('click', function() {
+                // Remove active class from all tabs
+                document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+                // Add active class to clicked tab
+                this.classList.add('active');
+                
+                // Hide all tab content
+                document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
+                // Show the corresponding tab content
+                document.getElementById(this.dataset.tab).classList.add('active');
+            });
+        });
+        
+        // Search functionality for onboarding data
+        document.getElementById('onboarding-search').addEventListener('keyup', function() {
+            const searchTerm = this.value.toLowerCase();
+            const table = document.getElementById('onboarding-table');
+            const rows = table.getElementsByTagName('tr');
+            
+            // Skip the header row
+            for (let i = 1; i < rows.length; i++) {
+                const row = rows[i];
+                const cells = row.getElementsByTagName('td');
+                let found = false;
+                
+                for (let j = 0; j < cells.length; j++) {
+                    const cellText = cells[j].textContent.toLowerCase();
+                    if (cellText.indexOf(searchTerm) > -1) {
+                        found = true;
+                        break;
+                    }
+                }
+                
+                if (found) {
+                    row.style.display = '';
+                } else {
+                    row.style.display = 'none';
+                }
+            }
+        });
+        
+        // Search functionality for recommendations data
+        document.getElementById('recommendations-search').addEventListener('keyup', function() {
+            const searchTerm = this.value.toLowerCase();
+            const table = document.getElementById('recommendations-table');
+            const rows = table.getElementsByTagName('tr');
+            
+            // Skip the header row
+            for (let i = 1; i < rows.length; i++) {
+                const row = rows[i];
+                const cells = row.getElementsByTagName('td');
+                let found = false;
+                
+                for (let j = 0; j < cells.length; j++) {
+                    const cellText = cells[j].textContent.toLowerCase();
+                    if (cellText.indexOf(searchTerm) > -1) {
+                        found = true;
+                        break;
+                    }
+                }
+                
+                if (found) {
+                    row.style.display = '';
+                } else {
+                    row.style.display = 'none';
+                }
+            }
+        });
+        
+        // Search functionality for events data
+        document.getElementById('events-search').addEventListener('keyup', function() {
+            const searchTerm = this.value.toLowerCase();
+            const table = document.getElementById('events-table');
+            const rows = table.getElementsByTagName('tr');
+            
+            // Skip the header row
+            for (let i = 1; i < rows.length; i++) {
+                const row = rows[i];
+                const cells = row.getElementsByTagName('td');
+                let found = false;
+                
+                for (let j = 0; j < cells.length; j++) {
+                    const cellText = cells[j].textContent.toLowerCase();
+                    if (cellText.indexOf(searchTerm) > -1) {
+                        found = true;
+                        break;
+                    }
+                }
+                
+                if (found) {
+                    row.style.display = '';
+                } else {
+                    row.style.display = 'none';
+                }
+            }
+        });
+        
+        // Pagination functionality
+        function setupPagination(tableId, paginationId, rowsPerPage = 10) {
+            const table = document.getElementById(tableId);
+            const pagination = document.getElementById(paginationId);
+            const rows = table.querySelectorAll('tbody tr');
+            
+            if (rows.length <= rowsPerPage) {
+                pagination.style.display = 'none';
+                return;
+            }
+            
+            const pageCount = Math.ceil(rows.length / rowsPerPage);
+            let currentPage = 1;
+            
+            function showPage(page) {
+                // Hide all rows
+                rows.forEach(row => {
+                    row.style.display = 'none';
+                });
+                
+                // Calculate start and end indices for the current page
+                const start = (page - 1) * rowsPerPage;
+                const end = start + rowsPerPage;
+                
+                // Show rows for the current page
+                for (let i = start; i < end && i < rows.length; i++) {
+                    rows[i].style.display = '';
+                }
+                
+                // Update pagination buttons
+                updatePagination();
+            }
+            
+            function updatePagination() {
+                pagination.innerHTML = '';
+                
+                // Previous button
+                if (currentPage > 1) {
+                    const prevButton = document.createElement('button');
+                    prevButton.className = 'pagination-button';
+                    prevButton.textContent = 'Previous';
+                    prevButton.addEventListener('click', () => {
+                        currentPage--;
+                        showPage(currentPage);
+                    });
+                    pagination.appendChild(prevButton);
+                }
+                
+                // Page buttons
+                for (let i = 1; i <= pageCount; i++) {
+                    // Only show a few page buttons around the current page
+                    if (
+                        i === 1 ||
+                        i === pageCount ||
+                        (i >= currentPage - 2 && i <= currentPage + 2)
+                    ) {
+                        const pageButton = document.createElement('button');
+                        pageButton.className = 'pagination-button';
+                        if (i === currentPage) {
+                            pageButton.classList.add('active');
+                        }
+                        pageButton.textContent = i;
+                        pageButton.addEventListener('click', () => {
+                            currentPage = i;
+                            showPage(currentPage);
+                        });
+                        pagination.appendChild(pageButton);
+                    } else if (
+                        (i === currentPage - 3 && currentPage > 3) ||
+                        (i === currentPage + 3 && currentPage < pageCount - 2)
+                    ) {
+                        // Add ellipsis
+                        const ellipsis = document.createElement('span');
+                        ellipsis.className = 'pagination-ellipsis';
+                        ellipsis.textContent = '...';
+                        pagination.appendChild(ellipsis);
+                    }
+                }
+                
+                // Next button
+                if (currentPage < pageCount) {
+                    const nextButton = document.createElement('button');
+                    nextButton.className = 'pagination-button';
+                    nextButton.textContent = 'Next';
+                    nextButton.addEventListener('click', () => {
+                        currentPage++;
+                        showPage(currentPage);
+                    });
+                    pagination.appendChild(nextButton);
+                }
+            }
+            
+            // Initialize the first page
+            showPage(currentPage);
+        }
+        
+        // Set up pagination for all tables
+        setupPagination('onboarding-table', 'onboarding-pagination');
+        setupPagination('recommendations-table', 'recommendations-pagination');
+        setupPagination('events-table', 'events-pagination');
+    </script>
+</body>
+</html>

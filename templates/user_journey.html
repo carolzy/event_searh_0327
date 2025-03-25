@@ -1,0 +1,201 @@
+{% extends "base.html" %}
+
+{% block title %}Your Journey with Atom.ai{% endblock %}
+
+{% block nav_journey_active %}active{% endblock %}
+
+{% block additional_styles %}
+<style>
+    .journey-header {
+        padding: 60px 0 40px;
+        background-color: var(--primary-white);
+        text-align: center;
+    }
+    
+    .journey-header h1 {
+        margin-bottom: 16px;
+    }
+    
+    .journey-header p {
+        max-width: 600px;
+        margin: 0 auto 24px;
+        color: var(--gray-600);
+        font-size: 20px;
+    }
+    
+    .journey-container {
+        max-width: 900px;
+        margin: 0 auto;
+        padding: 20px;
+    }
+    
+    .journey-timeline {
+        position: relative;
+        padding: 20px 0;
+    }
+    
+    .journey-timeline::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        bottom: 0;
+        left: 50px;
+        width: 4px;
+        background: linear-gradient(to bottom, var(--accent-blue), var(--accent-purple));
+        border-radius: 2px;
+    }
+    
+    .journey-item {
+        position: relative;
+        margin-bottom: 30px;
+        padding-left: 80px;
+    }
+    
+    .journey-date {
+        position: absolute;
+        left: 0;
+        width: 100px;
+        text-align: right;
+        font-size: 14px;
+        color: var(--gray-600);
+    }
+    
+    .journey-dot {
+        position: absolute;
+        left: 46px;
+        width: 12px;
+        height: 12px;
+        border-radius: 50%;
+        background-color: var(--accent-blue);
+        border: 2px solid white;
+        box-shadow: 0 0 0 2px var(--accent-blue-hover);
+    }
+    
+    .journey-content {
+        background-color: white;
+        border-radius: 12px;
+        padding: 20px;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+        border: 1px solid var(--gray-100);
+    }
+    
+    .journey-input {
+        font-weight: 600;
+        margin-bottom: 10px;
+        color: var(--gray-800);
+    }
+    
+    .journey-keywords {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        margin-top: 12px;
+    }
+    
+    .journey-keyword {
+        background-color: var(--gray-100);
+        color: var(--gray-700);
+        padding: 6px 12px;
+        border-radius: 20px;
+        font-size: 14px;
+        font-weight: 500;
+    }
+    
+    .empty-journey {
+        text-align: center;
+        padding: 60px 20px;
+        background-color: var(--gray-50);
+        border-radius: 12px;
+        margin-top: 40px;
+    }
+    
+    .empty-journey h3 {
+        margin-bottom: 16px;
+        color: var(--gray-800);
+    }
+    
+    .empty-journey p {
+        max-width: 500px;
+        margin: 0 auto 24px;
+        color: var(--gray-600);
+    }
+    
+    .journey-insights {
+        margin-top: 40px;
+        padding: 20px;
+        background-color: rgba(16, 163, 127, 0.05);
+        border: 1px solid rgba(16, 163, 127, 0.1);
+        border-radius: 12px;
+    }
+    
+    .journey-insights h3 {
+        margin-bottom: 16px;
+        color: var(--accent-blue);
+    }
+    
+    .insight-item {
+        margin-bottom: 12px;
+        padding-left: 24px;
+        position: relative;
+    }
+    
+    .insight-item::before {
+        content: '→';
+        position: absolute;
+        left: 0;
+        color: var(--accent-blue);
+        font-weight: bold;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<section class="journey-header">
+    <div class="container">
+        <h1>Your <span class="text-gradient">Journey</span> with Atom.ai</h1>
+        <p>Track your research progress and see how your interactions have evolved over time</p>
+    </div>
+</section>
+
+<div class="journey-container">
+    {% if journey_data and journey_data|length > 0 %}
+        <div class="journey-timeline">
+            {% for item in journey_data %}
+                <div class="journey-item">
+                    <div class="journey-date">{{ item.timestamp|replace('T', ' ')|replace('Z', '')|truncate(16, True, '') }}</div>
+                    <div class="journey-dot"></div>
+                    <div class="journey-content">
+                        <div class="journey-input">"{{ item.userInput }}"</div>
+                        <div class="journey-keywords">
+                            {% for keyword in item.keywords.split(', ') %}
+                                <span class="journey-keyword">{{ keyword }}</span>
+                            {% endfor %}
+                        </div>
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+        
+        <div class="journey-insights">
+            <h3>Your Research Insights</h3>
+            <div class="insight-item">Your most frequent keywords indicate a focus on B2B sales and enterprise solutions.</div>
+            <div class="insight-item">Your research is primarily centered around technology companies in the AI and data sectors.</div>
+            <div class="insight-item">Consider exploring adjacent markets like healthcare tech and fintech for new opportunities.</div>
+        </div>
+    {% else %}
+        <div class="empty-journey">
+            <h3>Your journey is just beginning!</h3>
+            <p>Start interacting with Atom.ai to build your research journey. Ask questions, explore companies, and discover insights tailored to your business needs.</p>
+            <a href="/" class="btn btn-primary">Start Your Journey</a>
+        </div>
+    {% endif %}
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        console.log("User journey page loaded");
+    });
+</script>
+{% endblock %}

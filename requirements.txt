@@ -1,0 +1,33 @@
+# Core dependencies
+# Removing flask to resolve dependency conflict
+hypercorn==0.15.0
+python-dotenv==1.0.0
+httpx==0.25.0
+
+# Audio processing
+SpeechRecognition==3.10.1
+pydub==0.25.1
+pyaudio==0.2.14
+
+# Text to Speech
+elevenlabs==0.2.24  # More stable version for Python 3.13
+
+# Web Framework
+quart==0.18.4
+werkzeug==2.3.7  # Pinning to a version compatible with Quart 0.18.4
+
+# HTTP Requests
+requests>=2.31.0
+
+# Date and Time
+python-dateutil==2.8.2
+
+# Async Support
+aiohttp>=3.9.0
+asyncio>=3.4.3
+
+# Utilities
+typing-extensions>=4.8.0
+
+# New dependencies
+google-generativeai==0.3.1

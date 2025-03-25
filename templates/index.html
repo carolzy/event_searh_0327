@@ -1,0 +1,1820 @@
+{% extends "base.html" %}
+
+{% block title %}atom.ai - Daily Company Research Assistant{% endblock %}
+
+{% block nav_home_active %}active{% endblock %}
+
+{% block styles %}
+    <style>
+        :root {
+            --dark-bg: #121212;
+            --dark-card: #1e1e1e;
+            --dark-header: #252525;
+            --dark-border: #2a2a2a;
+            --text-light: #ffffff;
+            --text-muted: #a0a0a0;
+            --accent-green: #4ade80;
+            --accent-blue: #3b82f6;
+            --gray-300: #d1d5db;
+            --gray-600: #4b5563;
+        }
+        
+        body {
+            background-color: var(--dark-bg);
+            color: var(--text-light);
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+            line-height: 1.5;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 1rem;
+        }
+        
+        .hero {
+            padding: 4rem 0;
+            text-align: center;
+        }
+        
+        .hero h1 {
+            font-size: 3rem;
+            font-weight: 800;
+            margin-bottom: 1rem;
+            background: linear-gradient(90deg, var(--accent-green), var(--accent-blue));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        
+        .hero p {
+            font-size: 1.25rem;
+            color: var(--text-muted);
+            max-width: 600px;
+            margin: 0 auto;
+        }
+        
+        .tagline {
+            font-size: 1rem;
+            color: var(--text-muted);
+            margin-top: 1rem;
+        }
+        
+        .chat-dialog {
+            background-color: var(--dark-card);
+            border-radius: 16px;
+            max-width: 800px;
+            margin: 2rem auto;
+            overflow: hidden;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3);
+            border: 1px solid var(--dark-border);
+        }
+
+        .chat-header {
+            padding: 1.5rem;
+            background-color: var(--dark-header);
+            color: white;
+            border-bottom: 1px solid var(--dark-border);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .chat-title {
+            margin: 0;
+            font-size: 1.5rem;
+            font-weight: 600;
+            color: white;
+        }
+
+        .tts-toggle-btn {
+            background: none;
+            border: none;
+            color: white;
+            cursor: pointer;
+            padding: 5px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: background-color 0.3s;
+        }
+
+        .tts-toggle-btn:hover {
+            background-color: rgba(255, 255, 255, 0.1);
+        }
+
+        .chat-body {
+            padding: 2rem;
+            min-height: 300px;
+            color: white;
+        }
+
+        .chat-message {
+            margin-bottom: 1.5rem;
+        }
+
+        .user-message {
+            display: flex;
+            justify-content: flex-end;
+        }
+
+        .assistant-message {
+            display: flex;
+            justify-content: flex-start;
+        }
+
+        .user-bubble {
+            background-color: var(--accent-blue);
+            color: white;
+            padding: 1rem;
+            border-radius: 16px 16px 0 16px;
+            max-width: 80%;
+            line-height: 1.6;
+        }
+
+        .assistant-bubble {
+            background-color: var(--dark-header);
+            color: white;
+            padding: 1rem;
+            border-radius: 16px 16px 16px 0;
+            max-width: 80%;
+            line-height: 1.6;
+        }
+
+        .chat-controls {
+            display: flex;
+            align-items: center;
+            padding: 1rem 2rem;
+            background-color: var(--dark-header);
+            border-top: 1px solid var(--dark-border);
+        }
+
+        .voice-button {
+            background-color: transparent;
+            border: none;
+            color: var(--text-color);
+            cursor: pointer;
+            padding: 8px;
+            border-radius: 50%;
+            transition: all 0.3s ease;
+        }
+        
+        .voice-button:hover {
+            background-color: rgba(59, 130, 246, 0.2);
+        }
+        
+        .voice-button.active {
+            background-color: rgba(59, 130, 246, 0.5);
+            animation: pulse 1.5s infinite;
+            box-shadow: 0 0 0 0 rgba(59, 130, 246, 1);
+        }
+        
+        @keyframes pulse {
+            0% {
+                transform: scale(0.95);
+                box-shadow: 0 0 0 0 rgba(59, 130, 246, 0.7);
+            }
+            
+            70% {
+                transform: scale(1);
+                box-shadow: 0 0 0 10px rgba(59, 130, 246, 0);
+            }
+            
+            100% {
+                transform: scale(0.95);
+                box-shadow: 0 0 0 0 rgba(59, 130, 246, 0);
+            }
+        }
+
+        .voice-button.recording {
+            background-color: rgba(239, 68, 68, 0.5);
+            animation: pulse-recording 1.5s infinite;
+            box-shadow: 0 0 0 0 rgba(239, 68, 68, 1);
+        }
+        
+        @keyframes pulse-recording {
+            0% {
+                transform: scale(0.95);
+                box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.7);
+            }
+            
+            70% {
+                transform: scale(1);
+                box-shadow: 0 0 0 10px rgba(239, 68, 68, 0);
+            }
+            
+            100% {
+                transform: scale(0.95);
+                box-shadow: 0 0 0 0 rgba(239, 68, 68, 0);
+            }
+        }
+
+        .chat-input {
+            flex: 1;
+            background-color: #333;
+            border: 1px solid #444;
+            border-radius: 8px;
+            padding: 12px 16px;
+            color: white;
+            font-size: 16px;
+            outline: none;
+        }
+
+        .chat-input::placeholder {
+            color: #888;
+        }
+
+        .chat-send {
+            background-color: var(--accent-blue);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            padding: 12px 20px;
+            margin-left: 12px;
+            cursor: pointer;
+            font-weight: 500;
+            transition: all 0.2s ease;
+        }
+
+        .chat-send:hover {
+            background-color: var(--accent-blue-hover);
+            transform: scale(1.05);
+        }
+
+        .progress-indicator {
+            display: flex;
+            justify-content: center;
+            margin-top: 1.5rem;
+            gap: 8px;
+        }
+
+        .progress-dot {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background-color: #333;
+            margin: 0 5px;
+            transition: all 0.3s ease;
+        }
+
+        .progress-dot.active {
+            background-color: var(--accent-blue);
+            transform: scale(1.2);
+        }
+
+        .hero {
+            text-align: center;
+            padding: 80px 0 40px;
+        }
+
+        .hero h1 {
+            font-size: 3.5rem;
+            margin-bottom: 1rem;
+            background: linear-gradient(90deg, var(--accent-blue) 0%, var(--accent-purple) 100%);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+            display: inline-block;
+        }
+
+        .hero p {
+            font-size: 1.25rem;
+            margin-bottom: 2rem;
+            color: var(--gray-300);
+        }
+        
+        .hero .tagline {
+            font-size: 1.1rem;
+            font-style: italic;
+            color: var(--accent-blue);
+            margin-top: -1rem;
+            margin-bottom: 2rem;
+        }
+
+        .features-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 2rem;
+            margin-top: 3rem;
+        }
+
+        .feature-card {
+            background-color: var(--dark-card);
+            border-radius: 16px;
+            padding: 2rem;
+            border: 1px solid var(--dark-border);
+            transition: all 0.3s ease;
+        }
+
+        .feature-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 30px rgba(0, 0, 0, 0.4);
+        }
+
+        .feature-icon {
+            background-color: rgba(16, 163, 127, 0.1);
+            color: var(--accent-blue);
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 1.5rem;
+        }
+
+        .feature-card h3 {
+            font-size: 1.5rem;
+            margin-bottom: 1rem;
+            color: white;
+        }
+
+        .feature-card p {
+            color: var(--gray-300);
+            line-height: 1.6;
+        }
+
+        .founder-highlight {
+            background-color: rgba(16, 163, 127, 0.05);
+            border: 1px solid rgba(16, 163, 127, 0.1);
+            border-radius: 16px;
+            padding: 2rem;
+            margin: 3rem auto;
+            max-width: 800px;
+            text-align: center;
+        }
+
+        .founder-highlight h2 {
+            color: var(--accent-blue);
+            font-size: 1.75rem;
+            margin-bottom: 1rem;
+        }
+
+        .founder-highlight p {
+            color: var(--gray-300);
+            font-size: 1.1rem;
+            line-height: 1.6;
+            margin-bottom: 0;
+        }
+        
+        .founder-philosophy {
+            margin-top: 3rem;
+            text-align: center;
+        }
+        
+        .founder-philosophy h2 {
+            font-size: 1.5rem;
+            margin-bottom: 1rem;
+        }
+        
+        .founder-philosophy .philosophy-text {
+            font-size: 1.1rem;
+            margin-bottom: 1rem;
+        }
+        
+        .onboarding-container {
+            display: flex;
+            flex-direction: row;
+            gap: 2rem;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        
+        .chat-dialog {
+            flex: 1;
+            background-color: #121212;
+            border-radius: 16px;
+            overflow: hidden;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3);
+            border: 1px solid #2a2a2a;
+        }
+        
+        #keywords-module {
+            width: 300px;
+            flex-shrink: 0;
+            background-color: #121212;
+            border-radius: 16px;
+            padding: 1.5rem;
+            border: 1px solid #2a2a2a;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3);
+        }
+        
+        #keywords-module h3 {
+            margin-top: 0;
+            margin-bottom: 1rem;
+            color: white;
+            font-size: 1.2rem;
+            font-weight: 600;
+        }
+        
+        #keywords-cloud {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+        }
+        
+        .keyword {
+            display: inline-block;
+            padding: 0.4rem 0.8rem;
+            background-color: rgba(0, 128, 0, 0.2);
+            color: #4ade80;
+            border-radius: 2rem;
+            font-size: 0.9rem;
+            font-weight: 500;
+            transition: all 0.2s ease;
+            cursor: pointer;
+            border: 1px solid rgba(0, 128, 0, 0.3);
+        }
+        
+        .keyword:hover {
+            background-color: rgba(0, 128, 0, 0.3);
+            transform: translateY(-2px);
+        }
+
+        .philosophy-boxes {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 2rem;
+            margin-top: 3rem;
+        }
+
+        .philosophy-box {
+            background-color: var(--dark-card);
+            border-radius: 16px;
+            padding: 2rem;
+            border: 1px solid var(--dark-border);
+            transition: all 0.3s ease;
+            text-align: center;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .philosophy-box:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 30px rgba(0, 0, 0, 0.4);
+        }
+
+        .philosophy-text {
+            font-size: 1.1rem;
+            margin-bottom: 0;
+            color: var(--gray-300);
+        }
+
+        .sales-funnel {
+            background-color: var(--dark-card);
+            padding: 4rem 2rem;
+            border-radius: 16px;
+            margin-top: 3rem;
+        }
+
+        .funnel-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        .funnel-step {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+            padding: 2rem;
+            border-radius: 8px;
+            background: linear-gradient(to bottom, rgba(30, 41, 59, 0.8), rgba(15, 23, 42, 0.8));
+            border: 1px solid var(--dark-border);
+            transition: all 0.3s ease;
+        }
+
+        .funnel-step:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 30px rgba(0, 0, 0, 0.4);
+        }
+
+        .funnel-step-1 {
+            width: 100%;
+            margin-bottom: 1rem;
+        }
+
+        .funnel-step-2 {
+            width: 85%;
+            margin-bottom: 1rem;
+        }
+
+        .funnel-step-3 {
+            width: 70%;
+            margin-bottom: 1rem;
+        }
+
+        .funnel-icon {
+            font-size: 2.5rem;
+            margin-bottom: 1rem;
+            background-color: var(--dark-header);
+            width: 70px;
+            height: 70px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+            border: 2px solid var(--accent-blue);
+        }
+
+        .funnel-connector {
+            height: 40px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            color: var(--accent-blue);
+        }
+
+        .funnel-footer {
+            text-align: center;
+            margin-top: 2rem;
+        }
+
+        .funnel-tagline {
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: white;
+        }
+
+        .audio-init-banner {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background-color: var(--accent-blue);
+            color: white;
+            padding: 1rem;
+            text-align: center;
+            border-radius: 8px 8px 0 0;
+        }
+        
+        .chat-messages {
+            padding: 1.5rem;
+            max-height: 400px;
+            overflow-y: auto;
+            background-color: var(--dark-card);
+        }
+        
+        .message {
+            margin-bottom: 1.5rem;
+            opacity: 0;
+            transform: translateY(20px);
+            animation: fadeIn 0.5s forwards;
+        }
+        
+        .message-content {
+            padding: 1rem;
+            border-radius: 12px;
+            line-height: 1.5;
+        }
+        
+        .message-bot .message-content {
+            background-color: var(--dark-header);
+            color: var(--text-light);
+            border-radius: 12px 12px 12px 0;
+        }
+        
+        .message-user .message-content {
+            background-color: rgba(74, 222, 128, 0.2);
+            color: var(--accent-green);
+            border-radius: 12px 12px 0 12px;
+            margin-left: auto;
+            text-align: right;
+            max-width: 80%;
+        }
+        
+        #current-question {
+            color: var(--text-light);
+            font-weight: 500;
+            margin-bottom: 1rem;
+            display: block;
+        }
+        
+        /* Add explanation tooltip for location */
+        .tooltip {
+            position: relative;
+            display: inline-block;
+            cursor: help;
+            margin-left: 0.5rem;
+        }
+        
+        .tooltip .tooltip-text {
+            visibility: hidden;
+            width: 250px;
+            background-color: #252525;
+            color: #fff;
+            text-align: center;
+            border-radius: 6px;
+            padding: 10px;
+            position: absolute;
+            z-index: 1;
+            bottom: 125%;
+            left: 50%;
+            margin-left: -125px;
+            opacity: 0;
+            transition: opacity 0.3s;
+            font-size: 0.9rem;
+            border: 1px solid #4ade80;
+        }
+        
+        .tooltip .tooltip-text::after {
+            content: "";
+            position: absolute;
+            top: 100%;
+            left: 50%;
+            margin-left: -5px;
+            border-width: 5px;
+            border-style: solid;
+            border-color: #4ade80 transparent transparent transparent;
+        }
+        
+        .tooltip:hover .tooltip-text {
+            visibility: visible;
+            opacity: 1;
+        }
+        
+        /* Recommendations tab styles */
+        .recommendations-header {
+            padding: 1.5rem;
+            background-color: var(--dark-header);
+            color: white;
+            border-bottom: 1px solid var(--dark-border);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .recommendations-header h3 {
+            margin: 0;
+            font-size: 1.5rem;
+            font-weight: 600;
+            color: white;
+        }
+        
+        .tabs {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1rem;
+            border-bottom: 1px solid var(--dark-border);
+        }
+        
+        .tab-button {
+            background-color: transparent;
+            border: none;
+            color: var(--text-light);
+            cursor: pointer;
+            padding: 1rem 2rem;
+            border-radius: 8px 8px 0 0;
+            transition: all 0.2s ease;
+        }
+        
+        .tab-button.active {
+            background-color: var(--dark-header);
+            color: white;
+        }
+        
+        .tab-button:hover {
+            background-color: rgba(255, 255, 255, 0.1);
+        }
+        
+        .tab-content {
+            padding: 2rem;
+        }
+        
+        .tab-pane {
+            display: none;
+        }
+        
+        .tab-pane.active {
+            display: block;
+        }
+        
+        #company-list, #investment-list, #articles-list, #leads-list, #events-list {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 1rem;
+        }
+        
+        .company-card, .investment-card, .article-card, .lead-card, .event-card {
+            background-color: var(--dark-card);
+            border-radius: 16px;
+            padding: 1.5rem;
+            border: 1px solid var(--dark-border);
+            transition: all 0.3s ease;
+            width: calc(33.33% - 1rem);
+        }
+        
+        .company-card:hover, .investment-card:hover, .article-card:hover, .lead-card:hover, .event-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 30px rgba(0, 0, 0, 0.4);
+        }
+        
+        .company-card h4, .investment-card h4, .article-card h4, .lead-card h4, .event-card h4 {
+            font-size: 1.2rem;
+            margin-bottom: 1rem;
+            color: white;
+        }
+        
+        .company-card p, .investment-card p, .article-card p, .lead-card p, .event-card p {
+            color: var(--gray-300);
+            line-height: 1.6;
+        }
+    </style>
+{% endblock %}
+
+{% block content %}
+<section class="hero">
+    <div class="container">
+        <h1>Find your killer customer</h1>
+        <p>An AI product created for startup founders</p>
+        <p class="tagline">The more you sell with Atom, the more it compliments your thinking.</p>
+    </div>
+</section>
+
+<main>
+    <div class="container">
+        <div class="onboarding-container">
+            <div class="chat-dialog">
+                <div class="chat-header">
+                    <h2 class="chat-title">Tell me about your product and yourself!</h2>
+                    <button id="tts-toggle" class="tts-toggle-btn" title="Toggle voice on/off">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M11 5L6 9H2v6h4l5 4V5z"></path>
+                            <path d="M15.54 8.46a5 5 0 0 1 0 7.07"></path>
+                            <path d="M19.07 4.93a10 10 0 0 1 0 14.14"></path>
+                        </svg>
+                    </button>
+                </div>
+                
+                <div class="chat-body" id="chat-body">
+                    <div class="chat-message assistant-message">
+                        <div class="assistant-bubble" id="current-question">
+                            Atom AI really would like to know more about the product you are selling. First tell me what problem does your product solve?
+                        </div>
+                    </div>
+                    <!-- Chat messages will be added here dynamically -->
+                </div>
+                
+                <!-- Add the audio element for TTS playback -->
+                <audio id="audio-response" style="display: none;"></audio>
+                
+                <!-- Add hidden input for current step tracking -->
+                <input type="hidden" id="current-step" value="product">
+                
+                <div class="chat-controls">
+                    <button class="voice-button" id="record-btn" title="Click to start voice input">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"></path>
+                            <path d="M19 10v2a7 7 0 0 1-14 0v-2"></path>
+                            <line x1="12" y1="19" x2="12" y2="23"></line>
+                            <line x1="8" y1="23" x2="16" y2="23"></line>
+                        </svg>
+                    </button>
+                    <input type="text" class="chat-input" id="answer" placeholder="Type your answer here...">
+                    <button class="chat-send" id="submit-btn">Send</button>
+                </div>
+            </div>
+            
+            <div id="keywords-module">
+                <h3>Atom has learned these about your product</h3>
+                <div id="keywords-cloud">
+                    <span class="keyword">B2B Sales</span>
+                    <span class="keyword">Market Research</span>
+                    <span class="keyword">Company Insights</span>
+                </div>
+            </div>
+            
+            <!-- New recommendations tab section -->
+            <div id="recommendations-module" style="display: none;">
+                <div class="recommendations-header">
+                    <h3>Your Recommended Target Companies</h3>
+                    <p>Based on your inputs, here are the companies you should target</p>
+                </div>
+                
+                <div class="tabs">
+                    <button class="tab-button active" data-tab="companies">Companies</button>
+                    <button class="tab-button" data-tab="investment">Investment Areas</button>
+                    <button class="tab-button" data-tab="articles">Recent Articles</button>
+                    <button class="tab-button" data-tab="leads">Key Leads</button>
+                    <button class="tab-button" data-tab="events">Local Events</button>
+                </div>
+                
+                <div class="tab-content">
+                    <div id="companies-tab" class="tab-pane active">
+                        <div id="company-list"></div>
+                    </div>
+                    
+                    <div id="investment-tab" class="tab-pane">
+                        <div id="investment-list"></div>
+                    </div>
+                    
+                    <div id="articles-tab" class="tab-pane">
+                        <div id="articles-list"></div>
+                    </div>
+                    
+                    <div id="leads-tab" class="tab-pane">
+                        <div id="leads-list"></div>
+                    </div>
+                    
+                    <div id="events-tab" class="tab-pane">
+                        <div id="events-list"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="progress-indicator">
+            <div class="progress-dot active" data-step="product"></div>
+            <div class="progress-dot" data-step="website"></div>
+            <div class="progress-dot" data-step="differentiation"></div>
+            <div class="progress-dot" data-step="market"></div>
+            <div class="progress-dot" data-step="company_size"></div>
+            <div class="progress-dot" data-step="location"></div>
+            <div class="progress-dot" data-step="linkedin"></div>
+        </div>
+    </div>
+</main>
+
+<section class="sales-funnel py-24">
+    <div class="container text-center">
+        <h2>Your Path to Sales Success</h2>
+        
+        <div class="funnel-container">
+            <div class="funnel-step funnel-step-1">
+                <div class="funnel-icon">🎯</div>
+                <h3>Meet your best target companies</h3>
+            </div>
+            
+            <div class="funnel-connector">
+                <svg width="40" height="40" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M12 5L12 19" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                    <path d="M19 12L12 19L5 12" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+            </div>
+            
+            <div class="funnel-step funnel-step-2">
+                <div class="funnel-icon">👋</div>
+                <h3>Greet the best leads within those companies</h3>
+            </div>
+            
+            <div class="funnel-connector">
+                <svg width="40" height="40" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M12 5L12 19" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                    <path d="M19 12L12 19L5 12" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+            </div>
+            
+            <div class="funnel-step funnel-step-3">
+                <div class="funnel-icon">🤝</div>
+                <h3>Meet your buyer in person, close deals with auto-prepared pitches</h3>
+            </div>
+        </div>
+        
+        <div class="funnel-footer">
+            <p class="funnel-tagline">All with <span class="text-gradient">Atom.ai</span></p>
+        </div>
+    </div>
+</section>
+
+<section class="features py-24">
+    <div class="container text-center">
+        <h2><span style="color: #FF5733; font-weight: 700; font-size: 1.2em; text-shadow: 1px 1px 3px rgba(0,0,0,0.2);">Why choose</span> <span class="text-gradient">atom.ai</span></h2>
+        
+        <div class="philosophy-boxes">
+            <div class="philosophy-box">
+                <p class="philosophy-text">Atom secretly helps founders develop the right habit of approaching selling.</p>
+            </div>
+            
+            <div class="philosophy-box">
+                <p class="philosophy-text">Learn to target the right way, build a consistent daily practice.</p>
+            </div>
+            
+            <div class="philosophy-box">
+                <p class="philosophy-text">Powered by machine and human intelligence from the best startup sales experts. Make the effective human touch yours.</p>
+            </div>
+        </div>
+    </div>
+</section>
+
+<div id="audio-init-banner" class="audio-init-banner">
+    <p>Click here to enable voice responses</p>
+</div>
+
+<div class="container mt-5">
+    <div class="row">
+        <div class="col-md-8 offset-md-2">
+            <div class="card shadow">
+                <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
+                    <h3 class="mb-0">Atom.ai</h3>
+                    <a href="/recommendations" id="view-recommendations-btn" class="btn btn-light">
+                        <i class="bi bi-list-stars"></i> View Recommendations
+                    </a>
+                </div>
+                <div class="card-body">
+                    <div id="chat-container" class="mb-3">
+                        <div id="chat-messages" class="chat-messages">
+                            <!-- Initial greeting message -->
+                            <div class="chat-message bot-message">
+                                {% if greeting %}
+                                    {{ greeting }}
+                                {% else %}
+                                    Hi there! I'm your Atom.ai assistant. You can ask me questions, and I'll help find relevant information for you.
+                                {% endif %}
+                                
+                                {% if first_question %}
+                                    <br><br>{{ first_question }}
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="input-group">
+                        <input type="text" id="user-input" class="form-control" placeholder="Type your message..." aria-label="User message">
+                        <button class="btn btn-primary" type="button" onclick="sendMessage()">
+                            <i class="bi bi-send"></i>
+                        </button>
+                        <button class="btn btn-outline-primary" type="button" id="voice-btn">
+                            <i class="bi bi-mic"></i>
+                        </button>
+                    </div>
+                    
+                    <div id="voice-feedback" class="mt-2 d-none">
+                        <p id="voice-status">Listening...</p>
+                        <div class="progress">
+                            <div id="voice-progress" class="progress-bar progress-bar-striped progress-bar-animated" role="progressbar" style="width: 0%"></div>
+                        </div>
+                    </div>
+                    
+                    <div id="recommendations-button-container" class="mt-3 text-center d-none">
+                        <a href="/recommendations" class="btn btn-success btn-lg">
+                            <i class="bi bi-list-stars"></i> View Full Recommendations
+                        </a>
+                    </div>
+                    
+                    <div class="text-center mt-3">
+                        <button id="generate-recommendations-btn" class="btn btn-outline-primary">
+                            <i class="bi bi-magic"></i> Generate Recommendations
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    let currentStep = 'product';
+    let isRecording = false;
+    let recognition = null;
+    let ttsEnabled = true; // TTS enabled by default
+    let audioInitialized = false;
+    
+    // Initialize the page
+    document.addEventListener('DOMContentLoaded', function() {
+        console.log("DOM content loaded");
+        
+        // Call TTS directly when page loads
+        const welcomeMessage = document.getElementById('current-question').textContent;
+        
+        // Set up tab switching
+        const tabButtons = document.querySelectorAll('.tab-button');
+        const tabPanes = document.querySelectorAll('.tab-pane');
+        
+        tabButtons.forEach(button => {
+            button.addEventListener('click', () => {
+                // Remove active class from all buttons
+                tabButtons.forEach(btn => btn.classList.remove('active'));
+                // Add active class to clicked button
+                button.classList.add('active');
+                
+                // Hide all tab panes
+                tabPanes.forEach(pane => pane.classList.remove('active'));
+                // Show the corresponding tab pane
+                const tabId = button.getAttribute('data-tab');
+                document.getElementById(`${tabId}-tab`).classList.add('active');
+            });
+        });
+        
+        // Call TTS API directly
+        fetch('/api/text_to_speech', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                text: welcomeMessage
+            })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.audio) {
+                console.log("Playing welcome audio");
+                playAudioResponse(data.audio);
+            }
+        })
+        .catch(error => {
+            console.error('Error with direct TTS call:', error);
+        });
+        
+        // Set up event listeners
+        document.getElementById('submit-btn').addEventListener('click', submitAnswer);
+        document.getElementById('answer').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                submitAnswer();
+            }
+        });
+        
+        // Set up speech recognition
+        setupSpeechRecognition();
+        
+        // Add event listener for record button
+        document.getElementById('record-btn').addEventListener('click', toggleRecording);
+        
+        // Add event listener for TTS toggle button
+        document.getElementById('tts-toggle').addEventListener('click', toggleTTS);
+        
+        // Hide the audio initialization banner - we'll auto-initialize
+        const audioBanner = document.getElementById('audio-init-banner');
+        audioBanner.style.display = 'none';
+        
+        // Auto-initialize audio after a short delay to ensure page is fully loaded
+        setTimeout(() => {
+            initAudio(true); // Initialize audio and play greeting automatically
+        }, 1000);
+    });
+    
+    // Initialize audio and optionally play greeting
+    function initAudio(playGreeting = false) {
+        console.log("Initializing audio system...");
+        audioInitialized = true;
+        
+        // Create a silent audio context to initialize audio on user interaction
+        const silentAudio = new Audio();
+        silentAudio.volume = 0.1;
+        
+        // Force playGreeting to true to ensure greeting is always played
+        playGreeting = true;
+        
+        // Try to play a silent sound to initialize audio context
+        document.addEventListener('click', function initAudioOnUserInteraction() {
+            silentAudio.play().then(() => {
+                console.log("Audio context initialized on user interaction");
+                document.removeEventListener('click', initAudioOnUserInteraction);
+                
+                if (playGreeting) {
+                    // Get the exact welcome message from the screen
+                    const welcomeMessage = document.getElementById('current-question').textContent;
+                    console.log("Welcome message content:", welcomeMessage);
+                    
+                    // Simulate clicking the record button to show it's active
+                    const recordBtn = document.getElementById('record-btn');
+                    if (recordBtn) {
+                        recordBtn.classList.add('active');
+                        setTimeout(() => {
+                            recordBtn.classList.remove('active');
+                        }, 2000);
+                    }
+                    
+                    // Add a small delay to ensure the audio context is properly initialized
+                    setTimeout(() => {
+                        // Use direct TTS for the greeting to ensure it matches what's on screen
+                        fallbackGreeting(welcomeMessage);
+                    }, 500);
+                }
+            }).catch(err => {
+                console.error("Failed to initialize audio context:", err);
+            });
+        }, { once: true });
+    }
+    
+    // Fallback to direct TTS for greeting
+    function fallbackGreeting(message) {
+        console.log("Using fallback greeting");
+        fetch('/api/text_to_speech', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                text: message
+            })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.audio) {
+                console.log("Playing audio response");
+                playAudioResponse(data.audio);
+            } else {
+                console.error("TTS failed:", data.error || "No audio data returned");
+            }
+        })
+        .catch(error => {
+            console.error('Error with fallback greeting:', error);
+        });
+    }
+    
+    // Toggle TTS functionality
+    function toggleTTS() {
+        ttsEnabled = !ttsEnabled;
+        const ttsButton = document.getElementById('tts-toggle');
+        
+        if (ttsEnabled) {
+            ttsButton.innerHTML = `
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M11 5L6 9H2v6h4l5 4V5z"></path>
+                    <path d="M15.54 8.46a5 5 0 0 1 0 7.07"></path>
+                    <path d="M19.07 4.93a10 10 0 0 1 0 14.14"></path>
+                </svg>
+            `;
+            ttsButton.title = "Voice on (click to turn off)";
+        } else {
+            ttsButton.innerHTML = `
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M11 5L6 9H2v6h4l5 4V5z"></path>
+                    <line x1="23" y1="9" x2="17" y2="15"></line>
+                    <line x1="17" y1="9" x2="23" y2="15"></line>
+                </svg>
+            `;
+            ttsButton.title = "Voice off (click to turn on)";
+        }
+    }
+    
+    // Initialize speech recognition
+    function setupSpeechRecognition() {
+        if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
+            const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+            recognition = new SpeechRecognition();
+            recognition.continuous = true;
+            recognition.interimResults = true;
+            recognition.lang = 'en-US';
+            
+            recognition.onstart = function() {
+                console.log('Speech recognition started');
+                isRecording = true;
+                document.getElementById('record-btn').classList.add('recording');
+                document.getElementById('record-btn').classList.remove('active');
+                
+                // Show a visual indicator that recording is active
+                const answerInput = document.getElementById('answer');
+                answerInput.placeholder = "Listening...";
+                
+                // Add a pulsing border to the input field
+                answerInput.style.borderColor = 'rgba(239, 68, 68, 0.7)';
+                answerInput.style.boxShadow = '0 0 0 1px rgba(239, 68, 68, 0.7)';
+            };
+            
+            recognition.onresult = function(event) {
+                let interimTranscript = '';
+                let finalTranscript = '';
+                
+                for (let i = event.resultIndex; i < event.results.length; i++) {
+                    const transcript = event.results[i][0].transcript;
+                    if (event.results[i].isFinal) {
+                        finalTranscript += transcript;
+                    } else {
+                        interimTranscript += transcript;
+                    }
+                }
+                
+                if (finalTranscript) {
+                    document.getElementById('answer').value = finalTranscript;
+                    processVoiceInteraction(finalTranscript, currentStep);
+                } else if (interimTranscript) {
+                    document.getElementById('answer').value = interimTranscript;
+                }
+            };
+            
+            recognition.onerror = function(event) {
+                console.error('Speech recognition error', event.error);
+                stopRecording();
+            };
+            
+            recognition.onend = function() {
+                console.log('Speech recognition ended');
+                isRecording = false;
+                document.getElementById('record-btn').classList.remove('recording');
+                
+                // Reset the input field
+                const answerInput = document.getElementById('answer');
+                answerInput.placeholder = "Type your answer here...";
+                answerInput.style.borderColor = '';
+                answerInput.style.boxShadow = '';
+            };
+        } else {
+            console.error('Speech recognition not supported in this browser');
+            document.getElementById('record-btn').disabled = true;
+        }
+    }
+    
+    // Toggle recording
+    function toggleRecording() {
+        // Make sure audio is initialized before recording
+        if (!audioInitialized) {
+            initAudio(true);
+        }
+        
+        if (isRecording) {
+            stopRecording();
+        } else {
+            startRecording();
+        }
+    }
+    
+    // Start recording
+    function startRecording() {
+        if (recognition) {
+            try {
+                // Add visual feedback by adding the active class
+                const recordBtn = document.getElementById('record-btn');
+                recordBtn.classList.add('active');
+                
+                // Start recognition after a short delay to ensure visual feedback is visible
+                setTimeout(() => {
+                    recognition.start();
+                }, 100);
+            } catch (e) {
+                console.error('Error starting speech recognition:', e);
+                // Remove active class if there's an error
+                document.getElementById('record-btn').classList.remove('active');
+            }
+        }
+    }
+    
+    // Stop recording
+    function stopRecording() {
+        if (recognition) {
+            try {
+                // Remove active class
+                document.getElementById('record-btn').classList.remove('active');
+                recognition.stop();
+            } catch (e) {
+                console.error('Error stopping speech recognition:', e);
+            }
+        }
+    }
+    
+    // Process voice interaction
+    function processVoiceInteraction(text, step) {
+        // Get the current step if not provided
+        if (!step) {
+            const currentStepElement = document.getElementById('current-step');
+            step = currentStepElement ? currentStepElement.value : 'product';
+        }
+        
+        // Disable the submit button while processing
+        document.getElementById('submit-btn').disabled = true;
+        
+        // Add the user's message to the chat
+        addMessageToChat('user', text);
+        
+        // Clear the input field
+        document.getElementById('answer').value = '';
+        
+        // Add explanation for location step
+        if (step === 'location') {
+            const questionElement = document.getElementById('current-question');
+            if (questionElement && !document.querySelector('.location-tooltip')) {
+                const tooltip = document.createElement('span');
+                tooltip.className = 'tooltip location-tooltip';
+                tooltip.innerHTML = '<i class="fas fa-info-circle"></i><span class="tooltip-text">We ask for your local area or zip code to find relevant local events and networking opportunities near you, not for global targeting.</span>';
+                questionElement.appendChild(tooltip);
+            }
+        }
+        
+        fetch('/api/voice_interaction', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                text: text,
+                step: step
+            })
+        })
+        .then(response => {
+            console.log("Voice interaction response status:", response.status);
+            return response.json();
+        })
+        .then(data => {
+            console.log("Voice interaction data received:", data);
+            document.getElementById('submit-btn').disabled = false;
+            
+            if (data.success) {
+                // Update the UI with the response
+                document.getElementById('current-question').textContent = data.text;
+                
+                // Add the assistant's message to the chat
+                addMessageToChat('assistant', data.text);
+                
+                // Update the step if provided
+                if (data.next_step) {
+                    const currentStepElement = document.getElementById('current-step');
+                    if (currentStepElement) {
+                        currentStepElement.value = data.next_step;
+                        currentStep = data.next_step; // Update the global variable as well
+                    }
+                }
+                
+                // Update keywords if provided
+                if (data.keywords && data.keywords.length > 0) {
+                    console.log("Received keywords:", data.keywords);
+                    updateKeywords(data.keywords);
+                    
+                    // Show the keywords module if it's hidden
+                    const keywordsModule = document.getElementById('keywords-module');
+                    if (keywordsModule) {
+                        keywordsModule.style.display = 'block';
+                    }
+                }
+                
+                // Play the response using TTS
+                if (ttsEnabled && data.audio) {
+                    console.log("Playing audio from voice_interaction response");
+                    playAudioResponse(data.audio);
+                } else if (ttsEnabled) {
+                    // Fallback to TTS API if audio not provided
+                    console.log("No audio in response, calling TTS API directly");
+                    playQuestion(data.text);
+                }
+            } else {
+                console.error("Error in voice interaction:", data.error);
+                alert("Error processing your input. Please try again.");
+            }
+        })
+        .catch(error => {
+            console.error("Error in voice interaction:", error);
+            document.getElementById('submit-btn').disabled = false;
+            alert("Error processing your input. Please try again.");
+        });
+    }
+    
+    // Add message to chat
+    function addMessageToChat(role, message) {
+        const chatBody = document.getElementById('chat-body');
+        
+        // If this is an assistant message, update the current-question div instead of adding a new message
+        if (role === 'assistant') {
+            // Keep the initial greeting visible
+            const initialGreeting = document.querySelector('.assistant-bubble#current-question');
+            if (initialGreeting) {
+                // Create a new message div for the assistant instead of overwriting the greeting
+                const messageDiv = document.createElement('div');
+                messageDiv.className = `chat-message ${role}-message`;
+                
+                const bubble = document.createElement('div');
+                bubble.className = `${role}-bubble`;
+                
+                // Check if the message contains company recommendations
+                if (message.includes("recommended companies") || message.includes("recommendations")) {
+                    // Convert plain text URLs to clickable links
+                    const urlRegex = /(https?:\/\/[^\s]+)/g;
+                    const processedMessage = message.replace(urlRegex, '<a href="$1" target="_blank">$1</a>');
+                    
+                    // Add company name links if they exist in the recommendations
+                    const companyNameRegex = /\d+\.\s+([A-Za-z0-9\s]+)/g;
+                    const finalMessage = processedMessage.replace(companyNameRegex, (match, companyName) => {
+                        const trimmedName = companyName.trim();
+                        return match.replace(trimmedName, `<a href="https://www.${trimmedName.toLowerCase()}.com" target="_blank">${trimmedName}</a>`);
+                    });
+                    
+                    bubble.innerHTML = finalMessage;
+                } else {
+                    // For regular messages, use textContent for safety
+                    bubble.textContent = message;
+                }
+                
+                messageDiv.appendChild(bubble);
+                chatBody.appendChild(messageDiv);
+            } else {
+                // If the greeting is gone for some reason, add a new message
+                const messageDiv = document.createElement('div');
+                messageDiv.className = `chat-message ${role}-message`;
+                
+                const bubble = document.createElement('div');
+                bubble.className = `${role}-bubble`;
+                
+                // Check if the message contains company recommendations
+                if (message.includes("recommended companies") || message.includes("recommendations")) {
+                    // Convert plain text URLs to clickable links
+                    const urlRegex = /(https?:\/\/[^\s]+)/g;
+                    const processedMessage = message.replace(urlRegex, '<a href="$1" target="_blank">$1</a>');
+                    
+                    // Add company name links if they exist in the recommendations
+                    const companyNameRegex = /\d+\.\s+([A-Za-z0-9\s]+)/g;
+                    const finalMessage = processedMessage.replace(companyNameRegex, (match, companyName) => {
+                        const trimmedName = companyName.trim();
+                        return match.replace(trimmedName, `<a href="https://www.${trimmedName.toLowerCase()}.com" target="_blank">${trimmedName}</a>`);
+                    });
+                    
+                    bubble.innerHTML = finalMessage;
+                } else {
+                    // For regular messages, use textContent for safety
+                    bubble.textContent = message;
+                }
+                
+                messageDiv.appendChild(bubble);
+                chatBody.appendChild(messageDiv);
+            }
+        } else {
+            // For user messages, add as normal
+            const messageDiv = document.createElement('div');
+            messageDiv.className = `chat-message ${role}-message`;
+            
+            const bubble = document.createElement('div');
+            bubble.className = `${role}-bubble`;
+            bubble.textContent = message;
+            
+            messageDiv.appendChild(bubble);
+            chatBody.appendChild(messageDiv);
+        }
+        
+        // Scroll to the bottom of the chat
+        chatBody.scrollTop = chatBody.scrollHeight;
+    }
+    
+    // Play audio response
+    function playAudioResponse(audioBase64) {
+        const audio = document.getElementById('audio-response');
+        audio.src = `data:audio/mpeg;base64,${audioBase64}`;
+        audio.play();
+    }
+    
+    // Play question using TTS
+    function playQuestion(text) {
+        if (ttsEnabled) {
+            console.log("Attempting to play TTS for:", text);
+            
+            fetch('/api/text_to_speech', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    text: text
+                })
+            })
+            .then(response => {
+                console.log("TTS response received:", response.status);
+                return response.json();
+            })
+            .then(data => {
+                console.log("TTS data received:", data);
+                if (data.audio) {
+                    console.log("Playing audio response");
+                    playAudioResponse(data.audio);
+                } else if (data.status === 'quota_exceeded') {
+                    console.warn("ElevenLabs quota exceeded:", data.message);
+                    // Show a notification to the user
+                    alert("Voice functionality temporarily unavailable due to quota limits. Text responses will still work.");
+                } else {
+                    console.error("TTS failed:", data.error || "No audio data returned");
+                }
+            })
+            .catch(error => {
+                console.error('Error generating speech:', error);
+            });
+        }
+    }
+    
+    // Submit answer
+    function submitAnswer() {
+        const answer = document.getElementById('answer').value.trim();
+        if (answer) {
+            processVoiceInteraction(answer, currentStep);
+        }
+    }
+    
+    // Store onboarding answer
+    function storeOnboardingAnswer(step, answer) {
+        console.log(`Storing answer for step ${step}: ${answer}`);
+        
+        fetch('/api/store_onboarding', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                step: step,
+                answer: answer
+            })
+        })
+        .then(response => {
+            console.log(`Store onboarding response status: ${response.status}`);
+            // Check if response is ok before trying to parse JSON
+            if (!response.ok) {
+                throw new Error(`Server returned ${response.status}: ${response.statusText}`);
+            }
+            return response.json();
+        })
+        .then(data => {
+            console.log('Store onboarding response data:', data);
+            if (!data.success) {
+                console.error('Error storing onboarding answer:', data.error);
+            }
+        })
+        .catch(error => {
+            console.error('Error storing onboarding answer:', error);
+            // Continue with the flow even if storing fails
+            // This prevents the user experience from being interrupted
+        });
+    }
+    
+    // Get next question
+    function getNextQuestion() {
+        // Define the question flow with the location question at the end
+        const questionFlow = {
+            'product': {
+                question: 'What problem does your product solve?',
+                next: 'website'
+            },
+            'website': {
+                question: 'Do you have a website that I can refer to?',
+                next: 'differentiation'
+            },
+            'differentiation': {
+                question: 'How do you plan to differentiate your product offering compared to the market?',
+                next: 'market'
+            },
+            'market': {
+                question: 'Which market sector or industry are you targeting?',
+                next: 'company_size'
+            },
+            'company_size': {
+                question: 'What size companies are your ideal customers?',
+                next: 'location'
+            },
+            'location': {
+                question: 'What is your location (zip code or area like New York City or San Francisco Bay Area) so we can recommend local events to meet your buyers?',
+                next: 'linkedin'
+            },
+            'linkedin': {
+                question: "If you'd like, please make sure you are logged into your LinkedIn via Atom so that we can find more precise recommendations based on your connections!",
+                next: 'complete'
+            },
+            'complete': {
+                question: 'Thanks for sharing! I\'ll use this information to help you find your ideal customers.',
+                next: null
+            }
+        };
+        
+        // Get the next step
+        const nextStep = questionFlow[currentStep].next;
+        if (nextStep) {
+            updateStep(nextStep);
+            // Play the next question
+            const displayedText = document.getElementById('current-question').textContent;
+            playQuestion(displayedText);
+        } else {
+            // Redirect to recommendations page or show completion message
+            window.location.href = '/recommendations';
+        }
+    }
+    
+    // Update step
+    function updateStep(step) {
+        // Update current step
+        currentStep = step;
+        
+        // Update progress dots
+        document.querySelectorAll('.progress-dot').forEach(dot => {
+            dot.classList.remove('active');
+        });
+        
+        const activeDot = document.querySelector(`.progress-dot[data-step="${step}"]`);
+        if (activeDot) {
+            activeDot.classList.add('active');
+        }
+    }
+    
+    // Update keywords
+    function updateKeywords(keywords) {
+        if (!keywords || !Array.isArray(keywords) || keywords.length === 0) {
+            console.log("No keywords provided or invalid keywords format");
+            return;
+        }
+        
+        console.log("Updating keywords with:", keywords);
+        const keywordsCloud = document.getElementById('keywords-cloud');
+        
+        // Get existing keywords
+        const existingKeywords = Array.from(keywordsCloud.querySelectorAll('.keyword')).map(el => el.textContent);
+        console.log("Existing keywords:", existingKeywords);
+        
+        // Combine existing and new keywords without duplicates
+        const allKeywords = [...new Set([...existingKeywords, ...keywords])];
+        
+        // No limit on keywords - display all of them
+        
+        // Clear the container
+        keywordsCloud.innerHTML = '';
+        
+        // Add all keywords to the cloud
+        allKeywords.forEach(keyword => {
+            const keywordSpan = document.createElement('span');
+            keywordSpan.className = 'keyword';
+            keywordSpan.textContent = keyword.trim();
+            
+            // Add click event to use the keyword in search
+            keywordSpan.addEventListener('click', () => {
+                const answerInput = document.getElementById('answer');
+                if (answerInput) {
+                    answerInput.value = keyword.trim();
+                    answerInput.focus();
+                }
+            });
+            
+            keywordsCloud.appendChild(keywordSpan);
+        });
+        
+        // Make sure the keywords module is visible
+        const keywordsModule = document.getElementById('keywords-module');
+        if (keywordsModule) {
+            keywordsModule.style.display = 'block';
+        }
+        
+        console.log("Updated keywords cloud with:", allKeywords);
+    }
+    
+    // Enhanced function to add recommendation data to the UI
+    function displayRecommendations(recommendations) {
+        console.log("Displaying recommendations:", recommendations);
+        
+        // Show the recommendations module
+        const recommendationsModule = document.getElementById('recommendations-module');
+        recommendationsModule.style.display = 'block';
+        
+        // Clear existing recommendations
+        document.getElementById('company-list').innerHTML = '';
+        document.getElementById('investment-list').innerHTML = '';
+        document.getElementById('articles-list').innerHTML = '';
+        document.getElementById('leads-list').innerHTML = '';
+        document.getElementById('events-list').innerHTML = '';
+        
+        // Process each recommendation
+        recommendations.forEach(recommendation => {
+            // Add to Companies tab
+            const companyCard = document.createElement('div');
+            companyCard.className = 'company-card';
+            companyCard.innerHTML = `
+                <h4>${recommendation.name}</h4>
+                <p><strong>Industry:</strong> ${recommendation.industry || 'N/A'}</p>
+                <p><strong>Size:</strong> ${recommendation.size || 'N/A'}</p>
+                <p><strong>Description:</strong> ${recommendation.description || 'No description available'}</p>
+                ${recommendation.fit_reason ? `<p><strong>Fit Reason:</strong> ${recommendation.fit_reason}</p>` : ''}
+                <p><a href="${recommendation.website || '#'}" target="_blank" class="company-link">Visit Website</a></p>
+            `;
+            document.getElementById('company-list').appendChild(companyCard);
+            
+            // Add to Investment Areas tab
+            if (recommendation.investment_areas || recommendation.budget_allocation) {
+                const investmentCard = document.createElement('div');
+                investmentCard.className = 'investment-card';
+                investmentCard.innerHTML = `<h4>${recommendation.name} - Investment Focus</h4>`;
+                
+                // Handle investment areas
+                if (recommendation.investment_areas) {
+                    let investmentAreas = recommendation.investment_areas;
+                    
+                    // Handle both string and array formats
+                    if (typeof investmentAreas === 'string') {
+                        investmentAreas = [investmentAreas];
+                    }
+                    
+                    investmentCard.innerHTML += `
+                        <p><strong>Current Year Focus:</strong> ${Array.isArray(investmentAreas) ? investmentAreas.join(', ') : investmentAreas}</p>
+                    `;
+                }
+                
+                // Add budget allocation if available
+                if (recommendation.budget_allocation) {
+                    investmentCard.innerHTML += `
+                        <p><strong>Budget Allocation:</strong> ${recommendation.budget_allocation}</p>
+                    `;
+                }
+                
+                document.getElementById('investment-list').appendChild(investmentCard);
+            }
+            
+            // Add to Articles tab - handle both articles and recent_news fields
+            const articlesArray = recommendation.articles || recommendation.recent_news || [];
+            if (articlesArray && articlesArray.length > 0) {
+                articlesArray.forEach(article => {
+                    if (!article) return; // Skip if article is null or undefined
+                    
+                    const articleCard = document.createElement('div');
+                    articleCard.className = 'article-card';
+                    
+                    // Handle different article formats
+                    const title = article.title || 'Untitled Article';
+                    const source = article.source || 'Unknown';
+                    const date = article.date || 'TBD';
+                    const quote = article.quote || article.summary || 'No quote available';
+                    const url = article.url || '#';
+                    
+                    articleCard.innerHTML = `
+                        <h4>${title}</h4>
+                        <p><strong>Source:</strong> ${source}</p>
+                        <p><strong>Date:</strong> ${date}</p>
+                        <p><strong>Quote:</strong> "${quote}"</p>
+                        <p><a href="${url}" target="_blank">Read Full Article</a></p>
+                    `;
+                    document.getElementById('articles-list').appendChild(articleCard);
+                });
+            }
+            
+            // Add to Leads tab - handle both leads and key_personnel fields
+            const leadsArray = recommendation.leads || [];
+            const keyPersonnel = recommendation.key_personnel || [];
+            
+            // Process leads format
+            if (leadsArray && leadsArray.length > 0) {
+                leadsArray.forEach(lead => {
+                    if (!lead) return; // Skip if lead is null or undefined
+                    
+                    const leadCard = document.createElement('div');
+                    leadCard.className = 'lead-card';
+                    leadCard.innerHTML = `
+                        <h4>${lead.name || 'Unknown Contact'}</h4>
+                        <p><strong>Title:</strong> ${lead.title || 'N/A'}</p>
+                        <p><strong>Company:</strong> ${recommendation.name}</p>
+                        <p><strong>Email:</strong> ${lead.email || 'N/A'}</p>
+                        <p><strong>LinkedIn:</strong> <a href="${lead.linkedin || '#'}" target="_blank">View Profile</a></p>
+                    `;
+                    document.getElementById('leads-list').appendChild(leadCard);
+                });
+            }
+            
+            // Process key_personnel format
+            if (keyPersonnel && keyPersonnel.length > 0) {
+                keyPersonnel.forEach(person => {
+                    // Handle format: "Name, Title"
+                    let name = person;
+                    let title = '';
+                    
+                    if (typeof person === 'string' && person.includes(',')) {
+                        const parts = person.split(',');
+                        name = parts[0].trim();
+                        title = parts.slice(1).join(',').trim();
+                    }
+                    
+                    const leadCard = document.createElement('div');
+                    leadCard.className = 'lead-card';
+                    leadCard.innerHTML = `
+                        <h4>${name || 'Unknown Contact'}</h4>
+                        <p><strong>Title:</strong> ${title || 'N/A'}</p>
+                        <p><strong>Company:</strong> ${recommendation.name}</p>
+                    `;
+                    document.getElementById('leads-list').appendChild(leadCard);
+                });
+            }
+            
+            // Add to Events tab
+            if (recommendation.events && recommendation.events.length > 0) {
+                recommendation.events.forEach(event => {
+                    if (!event) return; // Skip if event is null or undefined
+                    
+                    const eventCard = document.createElement('div');
+                    eventCard.className = 'event-card';
+                    eventCard.innerHTML = `
+                        <h4>${event.name || 'Unnamed Event'}</h4>
+                        <p><strong>Date:</strong> ${event.date || 'TBD'}</p>
+                        <p><strong>Location:</strong> ${event.location || 'TBD'}</p>
+                        <p><strong>Description:</strong> ${event.description || 'No description available'}</p>
+                        ${event.attending_companies ? `<p><strong>Attending Companies:</strong> ${Array.isArray(event.attending_companies) ? event.attending_companies.join(', ') : event.attending_companies}</p>` : ''}
+                        <p><a href="${event.url || '#'}" target="_blank">Event Details</a></p>
+                    `;
+                    document.getElementById('events-list').appendChild(eventCard);
+                });
+            }
+        });
+        
+        // IMPORTANT: Switch to the recommendations tab by making it visible
+        const tabsContainer = document.querySelector('.main-container');
+        if (tabsContainer) {
+            // Hide all main sections
+            const mainSections = tabsContainer.querySelectorAll('.module');
+            mainSections.forEach(section => {
+                section.style.display = 'none';
+            });
+            
+            // Show only the recommendations module
+            recommendationsModule.style.display = 'block';
+            
+            // Activate the first tab in the recommendations section
+            const tabButton = document.querySelector('.tab-button[data-tab="companies"]');
+            if (tabButton) {
+                tabButton.click();
+            }
+        }
+        
+        // Scroll to the recommendations section
+        recommendationsModule.scrollIntoView({ behavior: 'smooth' });
+    }
+</script>
+{% endblock %}

@@ -1,0 +1,459 @@
+{% extends "base.html" %}
+
+{% block title %}Recommendations{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="card shadow">
+        <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
+            <h3 class="mb-0">Your Personalized Recommendations</h3>
+            <a href="/" class="btn btn-light btn-sm">
+                <i class="bi bi-arrow-left"></i> Back to Chat
+            </a>
+        </div>
+        
+        <div class="card-body">
+            <!-- Loading indicator -->
+            <div id="loading-recommendations" class="text-center my-5">
+                <div class="spinner-border text-primary" role="status">
+                    <span class="visually-hidden">Loading...</span>
+                </div>
+                <p class="mt-2">Loading your personalized recommendations...</p>
+            </div>
+            
+            <!-- Tabs for different recommendation types -->
+            <ul class="nav nav-tabs" id="recommendation-tabs" role="tablist">
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link active" id="companies-tab" data-bs-toggle="tab" data-bs-target="#companies" type="button" role="tab" aria-controls="companies" aria-selected="true">
+                        <i class="bi bi-building"></i> Companies
+                    </button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link" id="articles-tab" data-bs-toggle="tab" data-bs-target="#articles" type="button" role="tab" aria-controls="articles" aria-selected="false">
+                        <i class="bi bi-journal-text"></i> Articles
+                    </button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link" id="quotes-tab" data-bs-toggle="tab" data-bs-target="#quotes" type="button" role="tab" aria-controls="quotes" aria-selected="false">
+                        <i class="bi bi-chat-quote"></i> Quotes
+                    </button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link" id="leads-tab" data-bs-toggle="tab" data-bs-target="#leads" type="button" role="tab" aria-controls="leads" aria-selected="false">
+                        <i class="bi bi-people"></i> Leads
+                    </button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link" id="events-tab" data-bs-toggle="tab" data-bs-target="#events" type="button" role="tab" aria-controls="events" aria-selected="false">
+                        <i class="bi bi-calendar-event"></i> Events
+                    </button>
+                </li>
+            </ul>
+            
+            <!-- Tab content -->
+            <div class="tab-content mt-3" id="recommendation-content">
+                <!-- Companies Tab -->
+                <div class="tab-pane fade show active" id="companies" role="tabpanel" aria-labelledby="companies-tab">
+                    <div id="companies-content">
+                        <!-- Will be populated with company recommendations -->
+                    </div>
+                    <div id="no-companies" class="alert alert-info d-none">
+                        No company recommendations available at this time.
+                    </div>
+                </div>
+                
+                <!-- Articles Tab -->
+                <div class="tab-pane fade" id="articles" role="tabpanel" aria-labelledby="articles-tab">
+                    <div id="articles-content">
+                        <!-- Will be populated with article links -->
+                    </div>
+                    <div id="no-articles" class="alert alert-info d-none">
+                        No article links available at this time.
+                    </div>
+                </div>
+                
+                <!-- Quotes Tab -->
+                <div class="tab-pane fade" id="quotes" role="tabpanel" aria-labelledby="quotes-tab">
+                    <div id="quotes-content">
+                        <!-- Will be populated with quotes -->
+                    </div>
+                    <div id="no-quotes" class="alert alert-info d-none">
+                        No relevant quotes available at this time.
+                    </div>
+                </div>
+                
+                <!-- Leads Tab -->
+                <div class="tab-pane fade" id="leads" role="tabpanel" aria-labelledby="leads-tab">
+                    <div id="leads-content">
+                        <!-- Will be populated with leads -->
+                    </div>
+                    <div id="no-leads" class="alert alert-info d-none">
+                        No potential leads available at this time.
+                    </div>
+                </div>
+                
+                <!-- Events Tab -->
+                <div class="tab-pane fade" id="events" role="tabpanel" aria-labelledby="events-tab">
+                    <div id="events-content">
+                        <!-- Will be populated with events -->
+                    </div>
+                    <div id="no-events" class="alert alert-info d-none">
+                        No upcoming events available at this time.
+                    </div>
+                </div>
+            </div>
+            
+            <div class="mt-4 text-center">
+                <button id="refresh-recommendations" class="btn btn-primary">
+                    <i class="bi bi-arrow-clockwise"></i> Generate New Recommendations
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// Load recommendations when the page loads
+document.addEventListener('DOMContentLoaded', function() {
+    fetchRecommendations();
+    
+    // Refresh button handler
+    document.getElementById('refresh-recommendations').addEventListener('click', function() {
+        fetchRecommendations();
+    });
+});
+
+function fetchRecommendations() {
+    // Show loading indicator
+    document.getElementById('loading-recommendations').classList.remove('d-none');
+    
+    // Hide all "no content" messages
+    document.querySelectorAll('[id^="no-"]').forEach(el => el.classList.add('d-none'));
+    
+    // Clear existing content
+    document.querySelectorAll('[id$="-content"]').forEach(el => {
+        if (!el.id.includes('recommendation-content')) {
+            el.innerHTML = '';
+        }
+    });
+    
+    // Fetch recommendations from API
+    fetch('/api/recommendations')
+        .then(response => response.json())
+        .then(data => {
+            // Hide loading indicator
+            document.getElementById('loading-recommendations').classList.add('d-none');
+            
+            // Process and display recommendations
+            displayRecommendations(data);
+        })
+        .catch(error => {
+            console.error('Error fetching recommendations:', error);
+            document.getElementById('loading-recommendations').classList.add('d-none');
+            
+            // Show error message in companies tab
+            const companiesContent = document.getElementById('companies-content');
+            companiesContent.innerHTML = `
+                <div class="alert alert-danger">
+                    <i class="bi bi-exclamation-triangle"></i> 
+                    There was an error loading recommendations. Please try again.
+                </div>
+            `;
+        });
+}
+
+function displayRecommendations(data) {
+    // Check if data is an array (as expected from API)
+    if (Array.isArray(data)) {
+        // Display companies
+        const companiesContent = document.getElementById('companies-content');
+        if (data.length > 0) {
+            let companiesHTML = '<div class="row">';
+            
+            data.forEach((company, index) => {
+                companiesHTML += `
+                    <div class="col-md-6 mb-3">
+                        <div class="card h-100">
+                            <div class="card-header d-flex justify-content-between align-items-center">
+                                <h5 class="mb-0">${company.name || 'Unknown Company'}</h5>
+                                <span class="badge bg-primary">${company.match_score || '0'}% Match</span>
+                            </div>
+                            <div class="card-body">
+                                <p>${company.description || 'No description available.'}</p>
+                                <p><strong>Reason for match:</strong> ${company.reason || 'No specific reason provided.'}</p>
+                                
+                                <div class="d-flex mt-3">
+                                    <a href="https://www.google.com/search?q=${encodeURIComponent(company.name)}" target="_blank" class="btn btn-outline-primary btn-sm me-2">
+                                        <i class="bi bi-google"></i> Research
+                                    </a>
+                                    <a href="https://www.linkedin.com/search/results/companies/?keywords=${encodeURIComponent(company.name)}" target="_blank" class="btn btn-outline-primary btn-sm">
+                                        <i class="bi bi-linkedin"></i> LinkedIn
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            });
+            
+            companiesHTML += '</div>';
+            companiesContent.innerHTML = companiesHTML;
+        } else {
+            document.getElementById('no-companies').classList.remove('d-none');
+        }
+        
+        // Display articles if available in any company
+        const articlesContent = document.getElementById('articles-content');
+        let articles = [];
+        data.forEach(company => {
+            if (company.recent_news && Array.isArray(company.recent_news)) {
+                articles = articles.concat(company.recent_news);
+            }
+        });
+        
+        if (articles.length > 0) {
+            let articlesHTML = '<ul class="list-group">';
+            articles.forEach(article => {
+                articlesHTML += `
+                    <li class="list-group-item">
+                        <a href="${article.url || '#'}" target="_blank">${article.title || 'Untitled Article'}</a>
+                        <p class="text-muted mb-0">${article.source || ''} ${article.date || ''}</p>
+                    </li>
+                `;
+            });
+            articlesHTML += '</ul>';
+            articlesContent.innerHTML = articlesHTML;
+        } else {
+            document.getElementById('no-articles').classList.remove('d-none');
+        }
+        
+        // Display quotes if available in any company
+        const quotesContent = document.getElementById('quotes-content');
+        let quotes = [];
+        data.forEach(company => {
+            if (company.quotes && Array.isArray(company.quotes)) {
+                quotes = quotes.concat(company.quotes);
+            }
+        });
+        
+        if (quotes.length > 0) {
+            let quotesHTML = '';
+            quotes.forEach(quote => {
+                quotesHTML += `
+                    <div class="card mb-3">
+                        <div class="card-body">
+                            <blockquote class="blockquote mb-0">
+                                <p>"${quote.text || quote}"</p>
+                                <footer class="blockquote-footer">${quote.source || 'Unknown Source'}</footer>
+                            </blockquote>
+                        </div>
+                    </div>
+                `;
+            });
+            quotesContent.innerHTML = quotesHTML;
+        } else {
+            document.getElementById('no-quotes').classList.remove('d-none');
+        }
+        
+        // Display leads if available in any company
+        const leadsContent = document.getElementById('leads-content');
+        let leads = [];
+        data.forEach(company => {
+            if (company.key_personnel && Array.isArray(company.key_personnel)) {
+                // Add company name to each lead
+                leads = leads.concat(company.key_personnel.map(person => {
+                    return { ...person, company: company.name };
+                }));
+            }
+        });
+        
+        if (leads.length > 0) {
+            let leadsHTML = '<div class="row">';
+            leads.forEach(lead => {
+                leadsHTML += `
+                    <div class="col-md-6 mb-3">
+                        <div class="card h-100">
+                            <div class="card-body">
+                                <h5 class="card-title">${lead.name || 'Unknown Person'}</h5>
+                                <h6 class="card-subtitle mb-2 text-muted">${lead.title || 'No title'} at ${lead.company || 'Unknown Company'}</h6>
+                                <a href="https://www.linkedin.com/search/results/people/?keywords=${encodeURIComponent(lead.name + ' ' + (lead.company || ''))}" target="_blank" class="btn btn-outline-primary btn-sm mt-2">
+                                    <i class="bi bi-linkedin"></i> Find on LinkedIn
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            });
+            leadsHTML += '</div>';
+            leadsContent.innerHTML = leadsHTML;
+        } else {
+            document.getElementById('no-leads').classList.remove('d-none');
+        }
+        
+        // Display events if available in any company
+        const eventsContent = document.getElementById('events-content');
+        let events = [];
+        data.forEach(company => {
+            if (company.events && Array.isArray(company.events)) {
+                // Add company name to each event
+                events = events.concat(company.events.map(event => {
+                    return { ...event, company: company.name };
+                }));
+            }
+        });
+        
+        if (events.length > 0) {
+            let eventsHTML = '<div class="list-group">';
+            events.forEach(event => {
+                eventsHTML += `
+                    <div class="list-group-item">
+                        <div class="d-flex w-100 justify-content-between">
+                            <h5 class="mb-1">${event.name || 'Unnamed Event'}</h5>
+                            <small>${event.date || 'Date not specified'}</small>
+                        </div>
+                        <p class="mb-1">${event.description || 'No description available'}</p>
+                        <small>Location: ${event.location || 'Location not specified'}</small>
+                        ${event.url ? `<div class="mt-2"><a href="${event.url}" target="_blank" class="btn btn-outline-primary btn-sm">More Info</a></div>` : ''}
+                    </div>
+                `;
+            });
+            eventsHTML += '</div>';
+            eventsContent.innerHTML = eventsHTML;
+        } else {
+            document.getElementById('no-events').classList.remove('d-none');
+        }
+    } else if (data.recommendations) {
+        // Handle the alternative response format with recommendations property
+        displayAlternativeRecommendations(data.recommendations);
+    } else {
+        // Show error for unexpected data format
+        document.getElementById('companies-content').innerHTML = `
+            <div class="alert alert-warning">
+                <i class="bi bi-exclamation-triangle"></i> 
+                Received unexpected data format from the server.
+            </div>
+        `;
+    }
+}
+
+function displayAlternativeRecommendations(recommendations) {
+    // Display companies
+    const companiesContent = document.getElementById('companies-content');
+    if (recommendations.companies && recommendations.companies.length > 0) {
+        let companiesHTML = '<div class="list-group">';
+        recommendations.companies.forEach((company, index) => {
+            companiesHTML += `
+                <div class="list-group-item">
+                    <h5>${typeof company === 'string' ? company : company.name || 'Unknown Company'}</h5>
+                    <div class="d-flex mt-2">
+                        <a href="https://www.google.com/search?q=${encodeURIComponent(typeof company === 'string' ? company : company.name || '')}" target="_blank" class="btn btn-outline-primary btn-sm me-2">
+                            <i class="bi bi-google"></i> Research
+                        </a>
+                        <a href="https://www.linkedin.com/search/results/companies/?keywords=${encodeURIComponent(typeof company === 'string' ? company : company.name || '')}" target="_blank" class="btn btn-outline-primary btn-sm">
+                            <i class="bi bi-linkedin"></i> LinkedIn
+                        </a>
+                    </div>
+                </div>
+            `;
+        });
+        companiesHTML += '</div>';
+        companiesContent.innerHTML = companiesHTML;
+    } else {
+        document.getElementById('no-companies').classList.remove('d-none');
+    }
+    
+    // Display articles
+    const articlesContent = document.getElementById('articles-content');
+    if (recommendations.article_links && recommendations.article_links.length > 0) {
+        let articlesHTML = '<ul class="list-group">';
+        recommendations.article_links.forEach(article => {
+            articlesHTML += `
+                <li class="list-group-item">
+                    <a href="${typeof article === 'string' ? article : article.url || '#'}" target="_blank">
+                        ${typeof article === 'string' ? article : article.title || 'View Article'}
+                    </a>
+                </li>
+            `;
+        });
+        articlesHTML += '</ul>';
+        articlesContent.innerHTML = articlesHTML;
+    } else {
+        document.getElementById('no-articles').classList.remove('d-none');
+    }
+    
+    // Display quotes
+    const quotesContent = document.getElementById('quotes-content');
+    if (recommendations.quotes && recommendations.quotes.length > 0) {
+        let quotesHTML = '';
+        recommendations.quotes.forEach(quote => {
+            quotesHTML += `
+                <div class="card mb-3">
+                    <div class="card-body">
+                        <blockquote class="blockquote mb-0">
+                            <p>"${typeof quote === 'string' ? quote : quote.text || ''}"</p>
+                            <footer class="blockquote-footer">${typeof quote === 'string' ? 'Source not specified' : quote.source || 'Unknown Source'}</footer>
+                        </blockquote>
+                    </div>
+                </div>
+            `;
+        });
+        quotesContent.innerHTML = quotesHTML;
+    } else {
+        document.getElementById('no-quotes').classList.remove('d-none');
+    }
+    
+    // Display leads
+    const leadsContent = document.getElementById('leads-content');
+    if (recommendations.leads && recommendations.leads.length > 0) {
+        let leadsHTML = '<div class="list-group">';
+        recommendations.leads.forEach(lead => {
+            const leadText = typeof lead === 'string' ? lead : lead.name || 'Unknown Person';
+            leadsHTML += `
+                <div class="list-group-item">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h5 class="mb-1">${leadText}</h5>
+                        </div>
+                        <a href="https://www.linkedin.com/search/results/people/?keywords=${encodeURIComponent(leadText)}" target="_blank" class="btn btn-outline-primary btn-sm">
+                            <i class="bi bi-linkedin"></i> Find on LinkedIn
+                        </a>
+                    </div>
+                </div>
+            `;
+        });
+        leadsHTML += '</div>';
+        leadsContent.innerHTML = leadsHTML;
+    } else {
+        document.getElementById('no-leads').classList.remove('d-none');
+    }
+    
+    // Display events
+    const eventsContent = document.getElementById('events-content');
+    if (recommendations.events && recommendations.events.length > 0) {
+        let eventsHTML = '<div class="list-group">';
+        recommendations.events.forEach(event => {
+            const eventText = typeof event === 'string' ? event : event.name || 'Unnamed Event';
+            const eventDate = typeof event === 'string' ? '' : event.date || '';
+            const eventLocation = typeof event === 'string' ? '' : event.location || '';
+            
+            eventsHTML += `
+                <div class="list-group-item">
+                    <div class="d-flex w-100 justify-content-between">
+                        <h5 class="mb-1">${eventText}</h5>
+                        ${eventDate ? `<small>${eventDate}</small>` : ''}
+                    </div>
+                    ${eventLocation ? `<small>Location: ${eventLocation}</small>` : ''}
+                </div>
+            `;
+        });
+        eventsHTML += '</div>';
+        eventsContent.innerHTML = eventsHTML;
+    } else {
+        document.getElementById('no-events').classList.remove('d-none');
+    }
+}
+</script>
+
+<!-- Add script tag for recommendations.js -->
+<script src="{{ url_for('static', filename='js/recommendations.js') }}"></script>
+{% endblock %}
