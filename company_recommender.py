@@ -289,35 +289,23 @@ class CompanyRecommender:
             async with httpx.AsyncClient(timeout=90.0) as client:  
                 url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key={self.gemini_api_key}"
                 
-                # Check if we need to use a more capable model for complex queries
-                use_pro_model = False
-                tech_terms = ["gemini", "flash", "2.0", "ai", "ml", "llm", "gpt", "claude", "anthropic", "openai"]
-                startup_terms = ["startup", "early stage", "seed", "series a", "emerging"]
-                
-                # Use Pro model for more complex queries about startups or specific technologies
-                if (product and any(term in product.lower() for term in tech_terms + startup_terms)) or \
-                   (keywords and any(term in " ".join(keywords).lower() for term in tech_terms + startup_terms)):
-                    use_pro_model = True
-                    url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-pro:generateContent?key={self.gemini_api_key}"
-                    logger.info("Using Gemini 2.0 Pro model for more detailed startup/technology search")
-                
                 data = {
                     "contents": [{
                         "parts": [{"text": prompt}]
                     }],
                     "generationConfig": {
-                        "temperature": 0.2 if not use_pro_model else 0.4,  # Higher temperature for more diverse results with Pro
+                        "temperature": 0.2,
                         "topP": 0.95,
                         "topK": 40,
-                        "maxOutputTokens": 4096 if not use_pro_model else 8192  # Increased token limit for Pro model
+                        "maxOutputTokens": 4096
                     }
                 }
                 
-                logger.info(f"Calling Gemini {'2.0 Pro' if use_pro_model else '2.0 Flash'} API for recommendations")
+                logger.info("Calling Gemini 2.0 Flash API for recommendations")
                 response = await client.post(
                     url,
                     json=data,
-                    timeout=90.0  # Increased timeout for more detailed responses
+                    timeout=90.0
                 )
                 
                 if response.status_code == 200:
@@ -369,24 +357,6 @@ class CompanyRecommender:
         from datetime import datetime
         current_date = datetime.now().strftime("%Y-%m-%d")
         
-        # Check if we're looking for startups specifically
-        startup_focus = ""
-        if product and "startup" in product.lower():
-            startup_focus = "\nIMPORTANT: Focus specifically on EARLY-STAGE STARTUPS and EMERGING COMPANIES rather than established enterprises."
-        elif company_size and any(term in company_size.lower() for term in ["small", "startup", "early", "seed", "series a"]):
-            startup_focus = "\nIMPORTANT: Focus specifically on EARLY-STAGE STARTUPS and EMERGING COMPANIES rather than established enterprises."
-        elif keywords and any(term in " ".join(keywords).lower() for term in ["startup", "early stage", "seed", "series a", "emerging"]):
-            startup_focus = "\nIMPORTANT: Focus specifically on EARLY-STAGE STARTUPS and EMERGING COMPANIES rather than established enterprises."
-        
-        # Check if we're looking for companies using specific technologies
-        tech_focus = ""
-        tech_terms = ["gemini", "flash", "2.0", "ai", "ml", "llm", "gpt", "claude", "anthropic", "openai"]
-        if product and any(term in product.lower() for term in tech_terms):
-            tech_focus = f"\nIMPORTANT: Focus on companies that are actively using or developing {product} technology."
-        elif keywords and any(term in " ".join(keywords).lower() for term in tech_terms):
-            matching_terms = [term for term in tech_terms if term in " ".join(keywords).lower()]
-            tech_focus = f"\nIMPORTANT: Focus on companies that are actively using or developing {', '.join(matching_terms)} technology."
-        
         return f"""You are a financial analyst specializing in B2B company research. Generate TARGET company recommendations for a B2B sales professional with the following profile:
 
 PRODUCT/SERVICE: {product}
@@ -398,7 +368,7 @@ KEYWORDS: {keywords_context}
 
 CURRENT DATE: {current_date}
 
-{user_preference_context}{startup_focus}{tech_focus}
+{user_preference_context}
 
 IMPORTANT CLARIFICATION: The user is selling {product} to companies in the {market} market. I need you to recommend POTENTIAL CUSTOMER COMPANIES that the user could sell to, NOT competitors who offer similar products. Focus on companies that might NEED or BUY {product}.
 
