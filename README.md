@@ -1,6 +1,6 @@
 # Atom.ai Voice Search Application
 
-This folder contains the organized essential files for the Atom.ai voice search application, a daily company research assistant that provides deep insights for B2B professionals.
+This folder contains the organized essential files for the Atom.ai voice search application, a daily company research assistant that provides deep insights for startup founders, B2B professionals, VCs and beyond. 
 
 ## Core Files
 
