@@ -38,7 +38,7 @@ class VoiceProcessor:
         self.temp_dir = tempfile.mkdtemp()
         logger.info(f"Created temporary directory at {self.temp_dir}")
         
-        # Check if ElevenLabs API key is available for TTS and STT
+        # Get ElevenLabs API key from environment variable
         self.elevenlabs_api_key = os.getenv("ELEVENLABS_API_KEY")
         self.tts_enabled = self.elevenlabs_api_key is not None
         
