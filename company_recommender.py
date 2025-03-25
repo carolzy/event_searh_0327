@@ -19,9 +19,8 @@ class CompanyRecommender:
         """Initialize the company recommender"""
         self.flow_controller = flow_controller
         self.gemini_api_key = os.getenv("GEMINI_API_KEY")
-        self.perplexity_api_key = os.getenv("PERPLEXITY_API_KEY")
         self.openai_api_key = os.getenv("OPENAI_API_KEY")
-        self.use_llm = self.gemini_api_key is not None or self.perplexity_api_key is not None or self.openai_api_key is not None
+        self.use_llm = self.gemini_api_key is not None or self.openai_api_key is not None
         self.use_mock_data = os.getenv("USE_MOCK_DATA", "false").lower() == "true"
         
         # Priority sources for company information
@@ -221,30 +220,19 @@ class CompanyRecommender:
             async with httpx.AsyncClient(timeout=90.0) as client:  
                 url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key={self.gemini_api_key}"
                 
-                # Check if we need to use a more capable model for complex queries
-                use_pro_model = False
-                tech_terms = ["gemini", "flash", "2.0", "ai", "ml", "llm", "gpt", "claude", "anthropic", "openai"]
-                startup_terms = ["startup", "early stage", "seed", "series a", "emerging"]
-                
-                # Use Pro model for more complex queries about startups or specific technologies
-                if (product and any(term in product.lower() for term in tech_terms + startup_terms)) or (keywords and any(term in " ".join(keywords).lower() for term in tech_terms + startup_terms)):
-                    use_pro_model = True
-                    url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-pro:generateContent?key={self.gemini_api_key}"
-                    logger.info("Using Gemini 2.0 Pro model for more detailed startup/technology search")
-                
                 data = {
                     "contents": [{
                         "parts": [{"text": prompt}]
                     }],
                     "generationConfig": {
-                        "temperature": 0.2 if not use_pro_model else 0.4,  # Higher temperature for more diverse results with Pro
+                        "temperature": 0.2,
                         "topP": 0.95,
                         "topK": 40,
-                        "maxOutputTokens": 4096 if not use_pro_model else 8192  # Increased token limit for Pro model
+                        "maxOutputTokens": 4096
                     }
                 }
                 
-                logger.info(f"Calling Gemini {'2.0 Pro' if use_pro_model else '2.0 Flash'} API for recommendations")
+                logger.info("Calling Gemini 2.0 Flash API for recommendations")
                 
                 try:
                     response = await client.post(
@@ -517,6 +505,8 @@ Return your response as a valid JSON array of company objects. Include at least 
     
     def _fix_common_json_errors(self, json_str):
         """Fix common JSON errors in the response"""
+        import re
+        
         # Replace single quotes with double quotes
         fixed = json_str.replace("'", '"')
         
@@ -531,6 +521,8 @@ Return your response as a valid JSON array of company objects. Include at least 
     
     def _extract_companies_with_regex(self, text):
         """Extract company data using regex patterns as a last resort"""
+        import re
+        
         companies = []
         
         # Try to find company blocks
@@ -559,6 +551,8 @@ Return your response as a valid JSON array of company objects. Include at least 
     
     def _extract_company_names(self, text):
         """Extract just company names from the text"""
+        import re
+        
         # Look for patterns like "Company Name: X" or "1. X" or "- X"
         company_patterns = [
             r'(?:Company|Name):\s*([^"\n,]+)',
