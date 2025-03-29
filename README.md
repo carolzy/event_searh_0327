@@ -1,6 +1,16 @@
-# Atom.ai Voice Search Application
+#Carol.ai :)  (the name may change) 
 
-This folder contains the organized essential files for the Atom.ai voice search application, a daily company research assistant that provides deep insights for startup founders, B2B professionals, VCs and beyond. 
+Every social interaction with a purpose is a selling moment. (It might sound cynical at first, but think of the upside!)
+
+AI is reshaping business from the ground up. Soon, we’ll see multi-billion-dollar companies built by "nuclear teams" of fewer than five people.
+
+Since the ChatGPT breakthrough, the surge of new startups has been staggering—many with a B2B focus, making sales a critical daily task for founders.
+
+And it’s not just founders: VCs "sell" to secure deals with top startups, job candidates pitch themselves to employers, and companies compete to attract the best talent.
+
+Selling isn’t just about transactions—it’s about persuasion, influence, and mutual gain.
+
+I have had much fun desigining this application: we are at the mere beginning of seeing AI transforming businesses to be centered aroung meaningful human interactions and valuating true contribution from the innovative, the builder and the real visionaries! 
 
 ## Core Files
 
@@ -40,15 +50,11 @@ The `static` directory contains:
 
 ## Core User Flow
 
-1. Daily Company Focus (Duolingo-style)
-   - Company essence and differentiators
-   - Current year's investment focus and resource allocation
+1. Event Recommendations with key ppl at that event most possible to be the buyer of the user's product
+2. Company recommendations where these ppl (met at the events) work
+3. Why these companies are a good match as buyers
+4. Quotes from recent interviews of leaders who work at these companies. 
 
-2. Optional Deep Dive into Key Personnel
-   - Recent news article quotes (2-year window)
-   - Interview summaries
-   - Contextual snippets based on user keywords
-
-3. Dynamic Keyword Generation
-   - User provides their context (e.g., "I sell Delta Lake at Databricks")
-   - System infers relevant keywords (e.g., "Cloud Transformation", "Cloud Storage")
+## Engineering and Product Innovation 
+1. We try to use a more dynamic approach matching the products' that the users are selling with the best events where they can find their future buyers. 
+2. 
