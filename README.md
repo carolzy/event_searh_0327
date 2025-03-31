@@ -1,6 +1,8 @@
-#Carol.ai :)  (the name may change) 
+#Atom.ai :)  (the name may change) 
 
 Every social interaction with a purpose is a selling moment. (It might sound cynical at first, but think of the upside!)
+
+Selling can center around goods or services, can also be selling yourself, selling a brand, selling 
 
 AI is reshaping business from the ground up. Soon, we’ll see multi-billion-dollar companies built by "nuclear teams" of fewer than five people.
 
