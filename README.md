@@ -24,6 +24,8 @@ And it's not just founders:
 I have had much fun designing this application: we are at the mere beginning of seeing AI transforming businesses to be centered around meaningful human interactions and valuating true contribution from the innovative, the builder and the real visionaries!
 
 ## The Atom.ai User Flow
+<img width="573" alt="Screenshot 2025-03-30 at 9 58 38 PM" src="https://github.com/user-attachments/assets/0f4d97e2-c634-41c3-8f09-42610ca12630" />
+
 
 1. Discovery Conversation**: Atom.ai engages with you to understand the core of your product/service offering in a voice-enabled conversational onboarding flow. 
 2. Insight Generation**: Keywords about your product/service are extracted as the conversation concludes
